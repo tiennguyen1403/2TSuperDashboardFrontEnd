@@ -1,8 +1,8 @@
 import React from "react";
 import Logo from "../Logo";
 import { Link } from "react-router-dom";
-import { Avatar, Button, Menu, MenuProps } from "antd";
-import { ArrowRight2 } from "iconsax-react";
+import { Avatar, Button, Flex, Menu, MenuProps } from "antd";
+import { ArrowRight2, Category, Home2, Profile2User } from "iconsax-react";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -16,7 +16,10 @@ const items: MenuItem[] = [
         key: "dashboard",
         label: (
           <Link to="/" className="menu-title">
-            <p>Dashboard</p>
+            <Flex align="center" gap={8}>
+              <Home2 size={20} variant="Bulk" />
+              <p>Dashboard</p>
+            </Flex>
           </Link>
         ),
       },
@@ -24,7 +27,10 @@ const items: MenuItem[] = [
         key: "components",
         label: (
           <Link to="/components" className="menu-title">
-            <p>Components</p>
+            <Flex align="center" gap={8}>
+              <Category size={20} variant="Bulk" />
+              <p>Components</p>
+            </Flex>
           </Link>
         ),
       },
@@ -39,7 +45,10 @@ const items: MenuItem[] = [
         key: "users",
         label: (
           <Link to="/users" className="menu-title">
-            <p>Users</p>
+            <Flex align="center" gap={8}>
+              <Profile2User size={20} variant="Bulk" />
+              <p>Users</p>
+            </Flex>
           </Link>
         ),
       },
