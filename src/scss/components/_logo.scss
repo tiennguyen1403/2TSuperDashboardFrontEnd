@@ -1,0 +1,13 @@
+@import "../abstracts/colors";
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .logo-name {
+    color: $primary-base;
+    font-size: 24px;
+    font-weight: 800;
+  }
+}

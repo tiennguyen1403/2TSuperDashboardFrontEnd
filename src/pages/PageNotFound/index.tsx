@@ -1,12 +1,13 @@
 import React from "react";
 import { Button } from "antd";
 import { useNavigate } from "react-router-dom";
+import { error404 } from "../../assets";
 
 const PageNotFound: React.FC = () => {
   const navigate = useNavigate();
   return (
     <div className="page-not-found">
-      <img src={require("../../assets/images/error-404.png")} alt="error-404" height={300} />
+      <img src={error404} alt="error-404" height={300} />
       <div className="content">
         <p className="title">Page Not Found</p>
         <p className="description">
