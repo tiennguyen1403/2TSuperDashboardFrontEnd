@@ -1,0 +1,17 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  .dashboard-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .dashboard-statistics-1 {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}

@@ -1,0 +1,21 @@
+.page-header {
+  width: 100%;
+  padding: 16px;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #efefef;
+
+  .page-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    .page-header-name {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 28px;
+    }
+  }
+}

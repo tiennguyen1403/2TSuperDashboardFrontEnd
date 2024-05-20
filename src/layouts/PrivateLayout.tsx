@@ -13,6 +13,10 @@ const headerStyle = {
   height: 74,
 };
 
+const contentStyle = {
+  padding: "32px 48px",
+};
+
 const PrivateLayout = () => {
   const accessToken = localStorage.getItem("accessToken");
 
@@ -27,7 +31,7 @@ const PrivateLayout = () => {
         <AntHeader style={headerStyle}>
           <Header />
         </AntHeader>
-        <Content>
+        <Content style={contentStyle}>
           <Outlet />
         </Content>
       </Layout>
