@@ -15,6 +15,7 @@ const headerStyle = {
 
 const contentStyle = {
   padding: "32px 48px",
+  "overflow-y": "auto",
 };
 
 const PrivateLayout = () => {
