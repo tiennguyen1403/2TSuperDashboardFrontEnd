@@ -1,6 +1,6 @@
-import axios from "axios";
 import { create } from "zustand";
 import { SignInDto } from "../pages/SignIn/SignIn.type";
+import axiosInstance from "../axios/axiosInstance";
 
 type State = {
   users: any;
@@ -20,7 +20,7 @@ const useUsersStore = create((set) => ({
   fetchUsers: async () => {
     set((state: State) => ({ ...state, loading: true }));
     try {
-      const res = await axios.get("https://jsonplaceholder.typicode.com/users");
+      const res = await axiosInstance.get("/users");
       const users = res.data;
       set((state: State) => ({ ...state, error: "", users }));
     } catch (error: any) {
