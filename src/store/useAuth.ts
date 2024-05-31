@@ -24,8 +24,14 @@ export const initialState: State = {
 const useAuthStore = create((set) => ({
   ...initialState,
 
-  setAccessToken: (accessToken: string) => set((state: State) => ({ ...state, accessToken })),
-  setRefreshToken: (refreshToken: string) => set((state: State) => ({ ...state, refreshToken })),
+  setAccessToken: (accessToken: string) => {
+    localStorage.setItem("accessToken", accessToken);
+    set((state: State) => ({ ...state, accessToken }));
+  },
+  setRefreshToken: (refreshToken: string) => {
+    localStorage.setItem("refreshToken", refreshToken);
+    set((state: State) => ({ ...state, refreshToken }));
+  },
   signIn: async (signInDto: SignInDto) => {
     set((state: State) => ({ ...state, loading: true }));
     try {
@@ -34,6 +40,7 @@ const useAuthStore = create((set) => ({
       const res = await axios.post(url, payload);
       const { accessToken, refreshToken, user } = res.data;
       localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       set((state: State) => ({ ...state, error: "", accessToken, refreshToken, profile: user }));
     } catch (error: any) {
       set((state: State) => ({ ...state, error: error.response.data.message }));
@@ -50,6 +57,7 @@ const useAuthStore = create((set) => ({
       const res = await axios.post(url, payload);
       const { accessToken, refreshToken, user } = res.data;
       localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
       set((state: State) => ({ ...state, error: "", accessToken, refreshToken, profile: user }));
     } catch (error: any) {
       set((state: State) => ({ ...state, error: error.response.data.message }));
@@ -61,6 +69,7 @@ const useAuthStore = create((set) => ({
   signOut: () => {
     set(() => initialState);
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   },
 }));
 

@@ -2,6 +2,7 @@ import { Layout } from "antd";
 import { Navigate, Outlet } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
+import AxiosConfig from "../components/AxiosConfig";
 
 const { Header: AntHeader, Sider, Content } = Layout;
 
@@ -24,19 +25,21 @@ const PrivateLayout = () => {
   if (!accessToken) return <Navigate to="/sign-in" replace />;
 
   return (
-    <Layout style={layoutStyle}>
-      <Sider width={288}>
-        <Sidebar />
-      </Sider>
-      <Layout>
-        <AntHeader style={headerStyle}>
-          <Header />
-        </AntHeader>
-        <Content style={contentStyle}>
-          <Outlet />
-        </Content>
+    <AxiosConfig>
+      <Layout style={layoutStyle}>
+        <Sider width={288}>
+          <Sidebar />
+        </Sider>
+        <Layout>
+          <AntHeader style={headerStyle}>
+            <Header />
+          </AntHeader>
+          <Content style={contentStyle}>
+            <Outlet />
+          </Content>
+        </Layout>
       </Layout>
-    </Layout>
+    </AxiosConfig>
   );
 };
 

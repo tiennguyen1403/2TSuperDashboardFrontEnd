@@ -1,5 +1,6 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
+import AxiosConfig from "../components/AxiosConfig";
 
 type Props = {
   element: any;
@@ -11,7 +12,7 @@ const AuthLayout: React.FC<Props> = (props) => {
 
   if (accessToken) return <Navigate to="/" replace />;
 
-  return <div>{element}</div>;
+  return <AxiosConfig>{element}</AxiosConfig>;
 };
 
 export default AuthLayout;

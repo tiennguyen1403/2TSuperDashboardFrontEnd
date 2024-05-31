@@ -1,21 +1,21 @@
 import { create } from "zustand";
 import { SignInDto } from "../pages/SignIn/SignIn.type";
-import axiosInstance from "../axios/axiosInstance";
+import { axiosInstance } from "../components/AxiosConfig";
 
 type State = {
   users: any;
   loading: boolean;
   error: string;
+  fetchUsers: () => void;
+  addUser: (user: SignInDto) => void;
+  updateUser: (user: SignInDto) => void;
+  deleteUser: (id: string) => void;
 };
 
-const initialState: State = {
+const useUsersStore = create<State>((set) => ({
   users: [],
-  loading: false,
+  loading: true,
   error: "",
-};
-
-const useUsersStore = create((set) => ({
-  ...initialState,
 
   fetchUsers: async () => {
     set((state: State) => ({ ...state, loading: true }));
