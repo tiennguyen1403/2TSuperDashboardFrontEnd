@@ -18,3 +18,9 @@ export interface UserDto {
   isActive?: boolean;
   avatar?: string;
 }
+
+export enum ModalType {
+  Default = "default",
+  Create = "create",
+  Update = "update",
+}

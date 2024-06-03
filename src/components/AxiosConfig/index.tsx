@@ -9,6 +9,11 @@ interface TokenResponse {
   refreshToken: string;
 }
 
+interface ErrorResponse {
+  statusCode: number;
+  message: string;
+}
+
 type Props = {
   children: React.ReactElement;
 };
@@ -66,7 +71,7 @@ const AxiosConfig: React.FC<Props> = (props: Props) => {
     return response;
   };
 
-  const onResponseFailure = async (error: AxiosError) => {
+  const onResponseFailure = async (error: AxiosError<ErrorResponse>) => {
     const originalRequest: any = error.config; /* config type error */
 
     if (error.response?.status === 401) {
@@ -79,7 +84,7 @@ const AxiosConfig: React.FC<Props> = (props: Props) => {
         notification.info({ message: "Token was expired!", description: "Please sign in again." });
       }
     }
-
+    notification.error({ message: error.response?.data.message });
     return Promise.reject(error);
   };
 

@@ -10,3 +10,10 @@ export const validateMessages = {
 };
 
 export const passwordRegEx = /^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^\w\d\s:])([^\s]){8,16}$/;
+
+export enum ELoading {
+  FETCH = "Fetch",
+  CREATE = "Create",
+  UPDATE = "Update",
+  DELETE = "Delete",
+}

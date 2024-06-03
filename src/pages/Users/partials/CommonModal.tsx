@@ -1,20 +1,24 @@
 import { Form, FormProps, Input, Modal, ModalProps, Switch } from "antd";
 import React from "react";
-import { initialValues } from "../constants";
-import { UserDto } from "../User.type";
+import { ModalType, UserDto } from "../User.type";
 import { passwordRegEx, validateMessages } from "src/helpers/constants";
 import { RuleRender } from "antd/es/form";
 
+const { Create } = ModalType;
+
 type Props = {
   open: boolean;
+  title?: string;
+  okText?: string;
+  loading: boolean;
+  userDto: UserDto;
+  modalType: ModalType;
   onCancel: () => void;
   onSubmit: (userDto: UserDto) => void;
-  okText?: string;
-  title?: string;
 };
 
 const CommonModal: React.FC<Props> = (props) => {
-  const { open, okText, title, onSubmit, onCancel } = props;
+  const { open, okText, title, onSubmit, onCancel, userDto, loading, modalType } = props;
   const [form] = Form.useForm();
 
   const validatePassword: RuleRender = () => ({
@@ -31,32 +35,24 @@ const CommonModal: React.FC<Props> = (props) => {
     },
   });
 
-  const handleSubmit = (values: UserDto) => {
-    onSubmit(values);
-    form.resetFields();
-  };
-
-  const handleCancel = () => {
-    form.resetFields();
-    onCancel();
-  };
-
   const formProps: FormProps = {
     form: form,
-    initialValues,
     validateMessages,
     variant: "filled",
     layout: "vertical",
     autoComplete: "off",
-    onFinish: handleSubmit,
+    onFinish: onSubmit,
+    initialValues: userDto,
   };
 
   const modalProps: ModalProps = {
     open,
     title,
     okText,
+    onCancel,
     onOk: form.submit,
-    onCancel: handleCancel,
+    confirmLoading: loading,
+    afterClose: form.resetFields,
   };
 
   return (
@@ -87,10 +83,10 @@ const CommonModal: React.FC<Props> = (props) => {
           <Input placeholder="Enter Email ..." />
         </Form.Item>
         <Form.Item<UserDto>
-          label="Password"
-          name="password"
-          rules={[{ required: true }, validatePassword]}
           hasFeedback
+          name="password"
+          rules={[{ required: modalType === Create }, validatePassword]}
+          label={modalType === Create ? "Password" : "New Password"}
           extra={
             <span>
               Password is 8-16 characters with no space and must contain at least 1 number, 1
@@ -98,15 +94,19 @@ const CommonModal: React.FC<Props> = (props) => {
             </span>
           }
         >
-          <Input.Password placeholder="Enter Password ..." />
+          <Input.Password
+            placeholder={modalType === Create ? "Enter Password ..." : "Enter New Password ..."}
+          />
         </Form.Item>
         <Form.Item<UserDto>
-          label="Confirm Password"
-          name="confirmPassword"
-          rules={[{ required: true }, validateConfirmPassword]}
           hasFeedback
+          name="confirmPassword"
+          rules={[{ required: modalType === Create }, validateConfirmPassword]}
+          label={modalType === Create ? "Confirm Password" : "Confirm New Password"}
         >
-          <Input.Password placeholder="Retype Password ..." />
+          <Input.Password
+            placeholder={modalType === Create ? "Retype Password ..." : "Retype New Password ..."}
+          />
         </Form.Item>
         <Form.Item<UserDto> label="Active" name="isActive" valuePropName="checked">
           <Switch />

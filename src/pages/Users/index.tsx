@@ -18,43 +18,51 @@ import {
 } from "iconsax-react";
 import React, { useEffect, useState } from "react";
 import useUsersStore from "../../store/useUsersStore";
-import { User, UserDto } from "./User.type";
+import { ModalType, User, UserDto } from "./User.type";
 import dayjs from "dayjs";
 import CommonModal from "./partials/CommonModal";
 import _ from "lodash";
+import { initialValues } from "./constants";
+import { ELoading } from "src/helpers/constants";
 
 const CopyIcon = () => <Copy size={18} style={{ transform: "translateY(4px)" }} />;
 
-enum ModalType {
-  Default = "default",
-  Create = "create",
-  Update = "update",
-}
+const { FETCH, CREATE, UPDATE } = ELoading;
 
 const Users: React.FC = () => {
-  const { fetchUsers, addUser, deleteUser, users, loading } = useUsersStore();
+  const { fetchUsers, fetchUserDetail, addUser, deleteUser, users, loadingStates } =
+    useUsersStore();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.Default);
+  const [userDto, setUserDto] = useState<UserDto>(initialValues);
 
   const openCreateModal = () => {
     setIsOpenModal(true);
+    setUserDto(initialValues);
     setModalType(ModalType.Create);
   };
 
-  const openUpdateModal = () => {
-    setIsOpenModal(true);
-    setModalType(ModalType.Update);
+  const openUpdateModal = async (uid: string) => {
+    try {
+      const user = await fetchUserDetail(uid);
+      setUserDto({ ...user, password: "", confirmPassword: "" } as UserDto);
+      setIsOpenModal(true);
+      setModalType(ModalType.Update);
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
   const closeModal = () => {
     setIsOpenModal(false);
+    setUserDto(initialValues);
     setModalType(ModalType.Default);
   };
 
-  const handleCreateUser = (userDto: UserDto) => {
+  const handleCreateUser = async (userDto: UserDto) => {
     try {
       const payload = _.omit(userDto, ["confirmPassword"]);
-      addUser(payload);
+      await addUser(payload);
       closeModal();
     } catch (error) {
       console.log("error :>> ", error);
@@ -141,7 +149,7 @@ const Users: React.FC = () => {
       key: "action",
       render: (_, record) => (
         <Flex align="center" justify="center" gap={8}>
-          <Button type="primary" onClick={openUpdateModal}>
+          <Button type="primary" onClick={() => openUpdateModal(record.id)}>
             Edit
           </Button>
           <Popconfirm {...popConfirmProps} onConfirm={() => handleRemoveUser(record.id)}>
@@ -174,15 +182,23 @@ const Users: React.FC = () => {
           </div>
         </div>
         <div className="users-body">
-          <Table bordered dataSource={users.items} columns={columns} loading={loading} />
+          <Table
+            bordered
+            columns={columns}
+            dataSource={users.items}
+            loading={loadingStates.includes(FETCH)}
+          />
         </div>
       </div>
       <CommonModal
+        userDto={userDto}
         open={isOpenModal}
+        modalType={modalType}
         onCancel={closeModal}
         onSubmit={handleCreateUser}
         okText={modalType === ModalType.Create ? "Create" : "Update"}
         title={modalType === ModalType.Create ? "Create User" : "Update User"}
+        loading={loadingStates.includes(ModalType.Create ? CREATE : UPDATE)}
       />
     </>
   );

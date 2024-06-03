@@ -1,63 +1,86 @@
 import { create } from "zustand";
-import { SignInDto } from "../pages/SignIn/SignIn.type";
 import { axiosInstance } from "../components/AxiosConfig";
-import { UserDto } from "src/pages/Users/User.type";
+import { User, UserDto } from "src/pages/Users/User.type";
 import { notification } from "antd";
+import { ELoading } from "src/helpers/constants";
+import _ from "lodash";
 
 type State = {
   users: any;
-  loading: boolean;
-  error: string;
-  fetchUsers: () => void;
-  addUser: (userDto: UserDto) => void;
-  updateUser: (user: SignInDto) => void;
-  deleteUser: (uid: string) => void;
+  loadingStates: ELoading[];
+  fetchUsers: () => Promise<void>;
+  fetchUserDetail: (uid: string) => Promise<User>;
+  addUser: (userDto: UserDto) => Promise<void>;
+  updateUser: (userDto: UserDto) => Promise<void>;
+  deleteUser: (uid: string) => Promise<void>;
 };
+
+const { FETCH, CREATE, UPDATE, DELETE } = ELoading;
 
 const useUsersStore = create<State>((set) => ({
   users: [],
-  loading: true,
-  error: "",
+  loadingStates: [],
 
   fetchUsers: async () => {
     try {
-      set((state) => ({ ...state, loading: true }));
+      set((state) => ({ ...state, loadingStates: [...state.loadingStates, FETCH] }));
       const res = await axiosInstance.get("/users");
-      set((state) => ({ ...state, error: "", users: res.data }));
+      set((state) => ({ ...state, users: res.data }));
+      return Promise.resolve(res.data);
     } catch (error: any) {
-      set((state) => ({ ...state, error: error.message }));
+      return Promise.reject(error);
     } finally {
-      set((state) => ({ ...state, loading: false }));
+      set((state) => ({ ...state, loadingStates: _.pull(state.loadingStates, FETCH) }));
     }
   },
-
-  addUser: async (userDto: UserDto) => {
+  fetchUserDetail: async (uid) => {
     try {
-      set((state) => ({ ...state, loading: true }));
+      const res = await axiosInstance.get(`/users/${uid}`);
+      return Promise.resolve(res.data);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  },
+  addUser: async (userDto) => {
+    try {
+      set((state) => ({ ...state, loadingStates: [...state.loadingStates, CREATE] }));
       await axiosInstance.post("/users", userDto);
       notification.success({ message: "User created successfully!" });
       const res = await axiosInstance.get("/users");
-      set((state) => ({ ...state, error: "", users: res.data }));
+      set((state) => ({ ...state, users: res.data }));
+      return Promise.resolve();
     } catch (error: any) {
-      set((state) => ({ ...state, error: error.message }));
       return Promise.reject(error);
     } finally {
-      set((state) => ({ ...state, loading: false }));
+      set((state) => ({ ...state, loadingStates: _.pull(state.loadingStates, CREATE) }));
     }
   },
-  updateUser: async (user: SignInDto) => {},
-  deleteUser: async (uid: string) => {
+  updateUser: async (userDto) => {
     try {
-      set((state) => ({ ...state, loading: true }));
+      set((state) => ({ ...state, loadingStates: [...state.loadingStates, UPDATE] }));
+      await axiosInstance.put(`/users/${userDto.id}`, userDto);
+      notification.success({ message: "User updated successfully!" });
+      const res = await axiosInstance.get("/users");
+      set((state) => ({ ...state, users: res.data }));
+      return Promise.resolve();
+    } catch (error) {
+      return Promise.reject(error);
+    } finally {
+      set((state) => ({ ...state, loadingStates: _.pull(state.loadingStates, UPDATE) }));
+    }
+  },
+  deleteUser: async (uid) => {
+    try {
+      set((state) => ({ ...state, loadingStates: [...state.loadingStates, DELETE] }));
       await axiosInstance.delete(`/users/${uid}`);
       notification.success({ message: "User deleted successfully!" });
       const res = await axiosInstance.get("/users");
-      set((state) => ({ ...state, error: "", users: res.data }));
+      set((state) => ({ ...state, users: res.data }));
+      return Promise.resolve();
     } catch (error: any) {
-      set((state) => ({ ...state, error: error.message }));
       return Promise.reject(error);
     } finally {
-      set((state) => ({ ...state, loading: false }));
+      set((state) => ({ ...state, loadingStates: _.pull(state.loadingStates, DELETE) }));
     }
   },
 }));
