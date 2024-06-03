@@ -7,3 +7,14 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface UserDto {
+  id?: string;
+  fullName: string;
+  email: string;
+  username: string;
+  password: string;
+  confirmPassword?: string;
+  isActive?: boolean;
+  avatar?: string;
+}

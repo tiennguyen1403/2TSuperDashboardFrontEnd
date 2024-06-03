@@ -2,6 +2,7 @@ import {
   Avatar,
   Button,
   Flex,
+  Form,
   Popconfirm,
   PopconfirmProps,
   Table,
@@ -16,15 +17,35 @@ import {
   TickCircle,
   CloseCircle,
 } from "iconsax-react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import useUsersStore from "../../store/useUsersStore";
 import { User } from "./User.type";
 import dayjs from "dayjs";
+import CommonModal from "./partials/CommonModal";
 
 const CopyIcon = () => <Copy size={18} style={{ transform: "translateY(4px)" }} />;
 
+enum ModalType {
+  Default = "default",
+  Create = "create",
+  Update = "update",
+}
+
 const Users: React.FC = () => {
   const { fetchUsers, users, loading } = useUsersStore();
+  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [modalType, setModalType] = useState<ModalType>(ModalType.Default);
+  const [form] = Form.useForm();
+
+  const openCreateModal = () => {
+    setIsOpenModal(true);
+    setModalType(ModalType.Create);
+  };
+
+  const closeModal = () => {
+    setIsOpenModal(false);
+    setModalType(ModalType.Default);
+  };
 
   const popConfirmProps: PopconfirmProps = {
     title: "Delete the user",
@@ -111,25 +132,34 @@ const Users: React.FC = () => {
   }, []); //eslint-disable-line
 
   return (
-    <div className="users">
-      <div className="users-header">
-        <div className="users-header-left">
-          <Profile2User size={28} />
-          <p className="users-header-title">Users</p>
+    <>
+      <div className="users">
+        <div className="users-header">
+          <div className="users-header-left">
+            <Profile2User size={28} />
+            <p className="users-header-title">Users</p>
+          </div>
+          <div className="users-header-right">
+            <Button type="primary" onClick={openCreateModal}>
+              <Flex gap={8}>
+                <UserAdd size={20} />
+                <span>Add User</span>
+              </Flex>
+            </Button>
+          </div>
         </div>
-        <div className="users-header-right">
-          <Button type="primary">
-            <Flex gap={8}>
-              <UserAdd size={20} />
-              <span>Add User</span>
-            </Flex>
-          </Button>
+        <div className="users-body">
+          <Table bordered dataSource={users.items} columns={columns} loading={loading} />
         </div>
       </div>
-      <div className="users-body">
-        <Table bordered dataSource={users.items} columns={columns} loading={loading} />
-      </div>
-    </div>
+      <CommonModal
+        form={form}
+        open={isOpenModal}
+        onCancel={closeModal}
+        okText={modalType === ModalType.Create ? "Create" : "Update"}
+        title={modalType === ModalType.Create ? "Create User" : "Update User"}
+      />
+    </>
   );
 };
 
