@@ -1,24 +1,21 @@
-import { Form, FormInstance, FormProps, Input, Modal, ModalProps, Switch, Typography } from "antd";
+import { Form, FormProps, Input, Modal, ModalProps, Switch } from "antd";
 import React from "react";
 import { initialValues } from "../constants";
 import { UserDto } from "../User.type";
 import { passwordRegEx, validateMessages } from "src/helpers/constants";
 import { RuleRender } from "antd/es/form";
 
-type Props = ModalProps & {
-  form?: FormInstance;
+type Props = {
+  open: boolean;
+  onCancel: () => void;
+  onSubmit: (userDto: UserDto) => void;
+  okText?: string;
+  title?: string;
 };
 
 const CommonModal: React.FC<Props> = (props) => {
+  const { open, okText, title, onSubmit, onCancel } = props;
   const [form] = Form.useForm();
-
-  const formProps: FormProps = {
-    form: form,
-    initialValues,
-    validateMessages: validateMessages,
-    layout: "vertical",
-    autoComplete: "off",
-  };
 
   const validatePassword: RuleRender = () => ({
     validator: (_, value) => {
@@ -34,8 +31,36 @@ const CommonModal: React.FC<Props> = (props) => {
     },
   });
 
+  const handleSubmit = (values: UserDto) => {
+    onSubmit(values);
+    form.resetFields();
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    onCancel();
+  };
+
+  const formProps: FormProps = {
+    form: form,
+    initialValues,
+    validateMessages,
+    variant: "filled",
+    layout: "vertical",
+    autoComplete: "off",
+    onFinish: handleSubmit,
+  };
+
+  const modalProps: ModalProps = {
+    open,
+    title,
+    okText,
+    onOk: form.submit,
+    onCancel: handleCancel,
+  };
+
   return (
-    <Modal {...props}>
+    <Modal {...modalProps}>
       <Form {...formProps}>
         <Form.Item<UserDto>
           label="Full Name"

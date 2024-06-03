@@ -2,7 +2,6 @@ import {
   Avatar,
   Button,
   Flex,
-  Form,
   Popconfirm,
   PopconfirmProps,
   Table,
@@ -19,9 +18,10 @@ import {
 } from "iconsax-react";
 import React, { useEffect, useState } from "react";
 import useUsersStore from "../../store/useUsersStore";
-import { User } from "./User.type";
+import { User, UserDto } from "./User.type";
 import dayjs from "dayjs";
 import CommonModal from "./partials/CommonModal";
+import _ from "lodash";
 
 const CopyIcon = () => <Copy size={18} style={{ transform: "translateY(4px)" }} />;
 
@@ -32,19 +32,42 @@ enum ModalType {
 }
 
 const Users: React.FC = () => {
-  const { fetchUsers, users, loading } = useUsersStore();
+  const { fetchUsers, addUser, deleteUser, users, loading } = useUsersStore();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.Default);
-  const [form] = Form.useForm();
 
   const openCreateModal = () => {
     setIsOpenModal(true);
     setModalType(ModalType.Create);
   };
 
+  const openUpdateModal = () => {
+    setIsOpenModal(true);
+    setModalType(ModalType.Update);
+  };
+
   const closeModal = () => {
     setIsOpenModal(false);
     setModalType(ModalType.Default);
+  };
+
+  const handleCreateUser = (userDto: UserDto) => {
+    try {
+      const payload = _.omit(userDto, ["confirmPassword"]);
+      addUser(payload);
+      closeModal();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const handleRemoveUser = (uid: string) => {
+    try {
+      deleteUser(uid);
+      closeModal();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
   const popConfirmProps: PopconfirmProps = {
@@ -116,10 +139,12 @@ const Users: React.FC = () => {
     {
       title: "Action",
       key: "action",
-      render: () => (
+      render: (_, record) => (
         <Flex align="center" justify="center" gap={8}>
-          <Button type="primary">Edit</Button>
-          <Popconfirm {...popConfirmProps}>
+          <Button type="primary" onClick={openUpdateModal}>
+            Edit
+          </Button>
+          <Popconfirm {...popConfirmProps} onConfirm={() => handleRemoveUser(record.id)}>
             <Button danger>Delete</Button>
           </Popconfirm>
         </Flex>
@@ -153,9 +178,9 @@ const Users: React.FC = () => {
         </div>
       </div>
       <CommonModal
-        form={form}
         open={isOpenModal}
         onCancel={closeModal}
+        onSubmit={handleCreateUser}
         okText={modalType === ModalType.Create ? "Create" : "Update"}
         title={modalType === ModalType.Create ? "Create User" : "Update User"}
       />

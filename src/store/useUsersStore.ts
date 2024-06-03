@@ -1,15 +1,17 @@
 import { create } from "zustand";
 import { SignInDto } from "../pages/SignIn/SignIn.type";
 import { axiosInstance } from "../components/AxiosConfig";
+import { UserDto } from "src/pages/Users/User.type";
+import { notification } from "antd";
 
 type State = {
   users: any;
   loading: boolean;
   error: string;
   fetchUsers: () => void;
-  addUser: (user: SignInDto) => void;
+  addUser: (userDto: UserDto) => void;
   updateUser: (user: SignInDto) => void;
-  deleteUser: (id: string) => void;
+  deleteUser: (uid: string) => void;
 };
 
 const useUsersStore = create<State>((set) => ({
@@ -18,21 +20,46 @@ const useUsersStore = create<State>((set) => ({
   error: "",
 
   fetchUsers: async () => {
-    set((state: State) => ({ ...state, loading: true }));
     try {
+      set((state) => ({ ...state, loading: true }));
       const res = await axiosInstance.get("/users");
-      const users = res.data;
-      set((state: State) => ({ ...state, error: "", users }));
+      set((state) => ({ ...state, error: "", users: res.data }));
     } catch (error: any) {
-      set((state: State) => ({ ...state, error: error.message }));
+      set((state) => ({ ...state, error: error.message }));
     } finally {
-      set((state: State) => ({ ...state, loading: false }));
+      set((state) => ({ ...state, loading: false }));
     }
   },
 
-  addUser: async (user: SignInDto) => {},
+  addUser: async (userDto: UserDto) => {
+    try {
+      set((state) => ({ ...state, loading: true }));
+      await axiosInstance.post("/users", userDto);
+      notification.success({ message: "User created successfully!" });
+      const res = await axiosInstance.get("/users");
+      set((state) => ({ ...state, error: "", users: res.data }));
+    } catch (error: any) {
+      set((state) => ({ ...state, error: error.message }));
+      return Promise.reject(error);
+    } finally {
+      set((state) => ({ ...state, loading: false }));
+    }
+  },
   updateUser: async (user: SignInDto) => {},
-  deleteUser: async (id: string) => {},
+  deleteUser: async (uid: string) => {
+    try {
+      set((state) => ({ ...state, loading: true }));
+      await axiosInstance.delete(`/users/${uid}`);
+      notification.success({ message: "User deleted successfully!" });
+      const res = await axiosInstance.get("/users");
+      set((state) => ({ ...state, error: "", users: res.data }));
+    } catch (error: any) {
+      set((state) => ({ ...state, error: error.message }));
+      return Promise.reject(error);
+    } finally {
+      set((state) => ({ ...state, loading: false }));
+    }
+  },
 }));
 
 export default useUsersStore;
