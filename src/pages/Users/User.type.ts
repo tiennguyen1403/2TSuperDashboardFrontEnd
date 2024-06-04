@@ -13,7 +13,7 @@ export interface UserDto {
   fullName: string;
   email: string;
   username: string;
-  password: string;
+  password?: string;
   confirmPassword?: string;
   isActive?: boolean;
   avatar?: string;

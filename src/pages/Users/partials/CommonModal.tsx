@@ -4,7 +4,7 @@ import { ModalType, UserDto } from "../User.type";
 import { passwordRegEx, validateMessages } from "src/helpers/constants";
 import { RuleRender } from "antd/es/form";
 
-const { Create } = ModalType;
+const { Create, Update } = ModalType;
 
 type Props = {
   open: boolean;
@@ -29,9 +29,32 @@ const CommonModal: React.FC<Props> = (props) => {
   });
 
   const validateConfirmPassword: RuleRender = ({ getFieldValue }) => ({
-    validator: (_, value) => {
-      if (!value || getFieldValue("password") === value) return Promise.resolve();
-      return Promise.reject(new Error("The new password that you entered do not match!"));
+    validator: (rule, value) => {
+      // console.log("value :>> ", value);
+      // console.log("password :>> ", getFieldValue("password"));
+      // if (!value || getFieldValue("password") === value) return Promise.resolve();
+      // if (modalType === Update && value !== getFieldValue("password"))
+      //   return Promise.reject(new Error("The new password that you entered do not match!"));
+      // return Promise.reject(new Error("The new password that you entered do not match!"));
+      const password = getFieldValue("password");
+      const confirmPassword = value;
+
+      switch (modalType) {
+        case Create: {
+          if (!confirmPassword) return Promise.resolve();
+          if (confirmPassword && confirmPassword === password) return Promise.resolve();
+          return Promise.reject(new Error("The new password that you entered do not match!"));
+        }
+        case Update: {
+          if (!password) return Promise.resolve();
+          if (!confirmPassword) return Promise.resolve();
+          if (password && password === confirmPassword) return Promise.resolve();
+          return Promise.reject(new Error("The new password that you entered do not match!"));
+        }
+        default: {
+          return Promise.resolve();
+        }
+      }
     },
   });
 
@@ -40,9 +63,8 @@ const CommonModal: React.FC<Props> = (props) => {
     validateMessages,
     variant: "filled",
     layout: "vertical",
-    autoComplete: "off",
     onFinish: onSubmit,
-    initialValues: userDto,
+    clearOnDestroy: true,
   };
 
   const modalProps: ModalProps = {
@@ -51,8 +73,9 @@ const CommonModal: React.FC<Props> = (props) => {
     okText,
     onCancel,
     onOk: form.submit,
+    destroyOnClose: true,
     confirmLoading: loading,
-    afterClose: form.resetFields,
+    afterOpenChange: (open) => (open ? form.setFieldsValue(userDto) : form.resetFields()),
   };
 
   return (
@@ -72,7 +95,7 @@ const CommonModal: React.FC<Props> = (props) => {
           rules={[{ required: true }]}
           hasFeedback
         >
-          <Input placeholder="Enter Username ..." />
+          <Input placeholder="Enter Username ..." autoComplete="new-password" />
         </Form.Item>
         <Form.Item<UserDto>
           label="Email"
@@ -96,6 +119,7 @@ const CommonModal: React.FC<Props> = (props) => {
         >
           <Input.Password
             placeholder={modalType === Create ? "Enter Password ..." : "Enter New Password ..."}
+            autoComplete="new-password"
           />
         </Form.Item>
         <Form.Item<UserDto>

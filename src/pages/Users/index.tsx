@@ -30,7 +30,7 @@ const CopyIcon = () => <Copy size={18} style={{ transform: "translateY(4px)" }} 
 const { FETCH, CREATE, UPDATE } = ELoading;
 
 const Users: React.FC = () => {
-  const { fetchUsers, fetchUserDetail, addUser, deleteUser, users, loadingStates } =
+  const { fetchUsers, fetchUserDetail, addUser, updateUser, deleteUser, users, loadingStates } =
     useUsersStore();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.Default);
@@ -45,7 +45,7 @@ const Users: React.FC = () => {
   const openUpdateModal = async (uid: string) => {
     try {
       const user = await fetchUserDetail(uid);
-      setUserDto({ ...user, password: "", confirmPassword: "" } as UserDto);
+      setUserDto(user as UserDto);
       setIsOpenModal(true);
       setModalType(ModalType.Update);
     } catch (error) {
@@ -59,11 +59,23 @@ const Users: React.FC = () => {
     setModalType(ModalType.Default);
   };
 
-  const handleCreateUser = async (userDto: UserDto) => {
+  const handleCreateUser = async (values: UserDto) => {
     try {
-      const payload = _.omit(userDto, ["confirmPassword"]);
-      await addUser(payload);
-      closeModal();
+      const payload = _.omit(values, ["confirmPassword"]);
+      console.log("payload :>> ", payload);
+      // await addUser(payload);
+      // closeModal();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const handleUpdateUser = async (values: UserDto) => {
+    try {
+      const payload = _.omit(values, ["confirmPassword"]);
+      console.log("payload :>> ", payload);
+      // await updateUser({ ...payload, id: userDto.id });
+      // closeModal();
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -195,7 +207,7 @@ const Users: React.FC = () => {
         open={isOpenModal}
         modalType={modalType}
         onCancel={closeModal}
-        onSubmit={handleCreateUser}
+        onSubmit={modalType === ModalType.Create ? handleCreateUser : handleUpdateUser}
         okText={modalType === ModalType.Create ? "Create" : "Update"}
         title={modalType === ModalType.Create ? "Create User" : "Update User"}
         loading={loadingStates.includes(ModalType.Create ? CREATE : UPDATE)}

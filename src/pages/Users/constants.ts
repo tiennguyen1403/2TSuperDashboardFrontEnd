@@ -5,7 +5,8 @@ export const initialValues: UserDto = {
   fullName: "",
   email: "",
   username: "",
-  password: "",
+  password: undefined,
+  confirmPassword: undefined,
   avatar: "",
   isActive: true,
 };
