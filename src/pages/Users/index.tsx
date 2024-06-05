@@ -18,12 +18,12 @@ import {
 } from "iconsax-react";
 import React, { useEffect, useState } from "react";
 import useUsersStore from "../../store/useUsersStore";
-import { ModalType, User, UserDto } from "./User.type";
+import { User, UserDto } from "./User.type";
 import dayjs from "dayjs";
 import CommonModal from "./partials/CommonModal";
 import _ from "lodash";
 import { initialValues } from "./constants";
-import { ELoading } from "src/helpers/constants";
+import { ELoading, ModalType } from "src/helpers/constants";
 
 const CopyIcon = () => <Copy size={18} style={{ transform: "translateY(4px)" }} />;
 
@@ -33,13 +33,13 @@ const Users: React.FC = () => {
   const { fetchUsers, fetchUserDetail, addUser, updateUser, deleteUser, users, loadingStates } =
     useUsersStore();
   const [isOpenModal, setIsOpenModal] = useState(false);
-  const [modalType, setModalType] = useState<ModalType>(ModalType.Default);
+  const [modalType, setModalType] = useState<ModalType>(ModalType.DEFAULT);
   const [userDto, setUserDto] = useState<UserDto>(initialValues);
 
   const openCreateModal = () => {
     setIsOpenModal(true);
     setUserDto(initialValues);
-    setModalType(ModalType.Create);
+    setModalType(ModalType.CREATE);
   };
 
   const openUpdateModal = async (uid: string) => {
@@ -47,7 +47,7 @@ const Users: React.FC = () => {
       const user = await fetchUserDetail(uid);
       setUserDto(user as UserDto);
       setIsOpenModal(true);
-      setModalType(ModalType.Update);
+      setModalType(ModalType.UPDATE);
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -56,7 +56,7 @@ const Users: React.FC = () => {
   const closeModal = () => {
     setIsOpenModal(false);
     setUserDto(initialValues);
-    setModalType(ModalType.Default);
+    setModalType(ModalType.DEFAULT);
   };
 
   const handleCreateUser = async (values: UserDto) => {
@@ -207,10 +207,10 @@ const Users: React.FC = () => {
         open={isOpenModal}
         modalType={modalType}
         onCancel={closeModal}
-        onSubmit={modalType === ModalType.Create ? handleCreateUser : handleUpdateUser}
-        okText={modalType === ModalType.Create ? "Create" : "Update"}
-        title={modalType === ModalType.Create ? "Create User" : "Update User"}
-        loading={loadingStates.includes(ModalType.Create ? CREATE : UPDATE)}
+        onSubmit={modalType === ModalType.CREATE ? handleCreateUser : handleUpdateUser}
+        okText={modalType === ModalType.CREATE ? "Create" : "Update"}
+        title={modalType === ModalType.CREATE ? "Create User" : "Update User"}
+        loading={loadingStates.includes(ModalType.CREATE ? CREATE : UPDATE)}
       />
     </>
   );

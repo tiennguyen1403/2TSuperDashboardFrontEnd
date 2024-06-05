@@ -17,3 +17,9 @@ export enum ELoading {
   UPDATE = "Update",
   DELETE = "Delete",
 }
+
+export enum ModalType {
+  DEFAULT = "default",
+  CREATE = "create",
+  UPDATE = "update",
+}

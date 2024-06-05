@@ -2,7 +2,7 @@ import React from "react";
 import Logo from "../Logo";
 import { Link } from "react-router-dom";
 import { Avatar, Button, Flex, Menu, MenuProps } from "antd";
-import { ArrowRight2, Category, Home2, Profile2User } from "iconsax-react";
+import { ArrowRight2, Briefcase, Category, Home2, Profile2User } from "iconsax-react";
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -48,6 +48,17 @@ const items: MenuItem[] = [
             <Flex align="center" gap={8}>
               <Profile2User size={20} variant="Bulk" />
               <p>Users</p>
+            </Flex>
+          </Link>
+        ),
+      },
+      {
+        key: "projects",
+        label: (
+          <Link to="/projects" className="menu-title">
+            <Flex align="center" gap={8}>
+              <Briefcase size={20} variant="Bulk" />
+              <p>Projects</p>
             </Flex>
           </Link>
         ),

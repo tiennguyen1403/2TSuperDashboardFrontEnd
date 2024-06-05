@@ -9,6 +9,7 @@ import PageNotFound from "./pages/PageNotFound";
 import AuthLayout from "./layouts/AuthLayout";
 import SignUp from "./pages/SignUp";
 import Users from "./pages/Users";
+import Projects from "./pages/Projects";
 
 const App: React.FC = () => {
   const router = createBrowserRouter([
@@ -27,6 +28,10 @@ const App: React.FC = () => {
         {
           path: "users",
           element: <Users />,
+        },
+        {
+          path: "projects",
+          element: <Projects />,
         },
       ],
     },

@@ -1,10 +1,10 @@
 import { Form, FormProps, Input, Modal, ModalProps, Switch } from "antd";
 import React from "react";
-import { ModalType, UserDto } from "../User.type";
-import { passwordRegEx, validateMessages } from "src/helpers/constants";
+import { UserDto } from "../User.type";
+import { ModalType, passwordRegEx, validateMessages } from "src/helpers/constants";
 import { RuleRender } from "antd/es/form";
 
-const { Create, Update } = ModalType;
+const { CREATE, UPDATE } = ModalType;
 
 type Props = {
   open: boolean;
@@ -40,12 +40,12 @@ const CommonModal: React.FC<Props> = (props) => {
       const confirmPassword = value;
 
       switch (modalType) {
-        case Create: {
+        case CREATE: {
           if (!confirmPassword) return Promise.resolve();
           if (confirmPassword && confirmPassword === password) return Promise.resolve();
           return Promise.reject(new Error("The new password that you entered do not match!"));
         }
-        case Update: {
+        case UPDATE: {
           if (!password) return Promise.resolve();
           if (!confirmPassword) return Promise.resolve();
           if (password && password === confirmPassword) return Promise.resolve();
@@ -108,8 +108,8 @@ const CommonModal: React.FC<Props> = (props) => {
         <Form.Item<UserDto>
           hasFeedback
           name="password"
-          rules={[{ required: modalType === Create }, validatePassword]}
-          label={modalType === Create ? "Password" : "New Password"}
+          rules={[{ required: modalType === CREATE }, validatePassword]}
+          label={modalType === CREATE ? "Password" : "New Password"}
           extra={
             <span>
               Password is 8-16 characters with no space and must contain at least 1 number, 1
@@ -118,18 +118,18 @@ const CommonModal: React.FC<Props> = (props) => {
           }
         >
           <Input.Password
-            placeholder={modalType === Create ? "Enter Password ..." : "Enter New Password ..."}
+            placeholder={modalType === CREATE ? "Enter Password ..." : "Enter New Password ..."}
             autoComplete="new-password"
           />
         </Form.Item>
         <Form.Item<UserDto>
           hasFeedback
           name="confirmPassword"
-          rules={[{ required: modalType === Create }, validateConfirmPassword]}
-          label={modalType === Create ? "Confirm Password" : "Confirm New Password"}
+          rules={[{ required: modalType === CREATE }, validateConfirmPassword]}
+          label={modalType === CREATE ? "Confirm Password" : "Confirm New Password"}
         >
           <Input.Password
-            placeholder={modalType === Create ? "Retype Password ..." : "Retype New Password ..."}
+            placeholder={modalType === CREATE ? "Retype Password ..." : "Retype New Password ..."}
           />
         </Form.Item>
         <Form.Item<UserDto> label="Active" name="isActive" valuePropName="checked">
