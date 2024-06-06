@@ -6,13 +6,15 @@ import type { MenuProps } from "antd";
 
 type Props = {
   project: Project;
+  openUpdateModal: (project: Project) => void;
   onRemoveProject: (id: Project["id"]) => void;
+  openAddMemberDrawer: (project: Project) => void;
 };
 
 const { confirm } = Modal;
 
 const ProjectCard: React.FC<Props> = (props) => {
-  const { project, onRemoveProject } = props;
+  const { project, onRemoveProject, openUpdateModal, openAddMemberDrawer } = props;
   const { name, projectImage, description } = project;
 
   const showDeleteConfirm = () => {
@@ -30,11 +32,13 @@ const ProjectCard: React.FC<Props> = (props) => {
       label: "Edit",
       key: "edit",
       icon: <Edit size={20} />,
+      onClick: () => openUpdateModal(project),
     },
     {
       label: "Add Member",
       key: "add-member",
       icon: <UserAdd size={20} />,
+      onClick: () => openAddMemberDrawer(project),
     },
     {
       type: "divider",

@@ -3,30 +3,67 @@ import { Add } from "iconsax-react";
 import React, { useEffect, useState } from "react";
 import useProjectStore from "src/store/useProjectStore";
 import CommonModal from "./partials/CommonModal";
-import { ProjectDto } from "./Project.type";
+import { Project, ProjectDto } from "./Project.type";
 import { initialValues } from "./constants";
 import { ELoading, ModalType } from "src/helpers/constants";
 import ProjectCard from "./partials/ProjectCard";
-
-const { CREATE, UPDATE } = ELoading;
+import { convertImagUrlToUploadItem } from "src/helpers/utilities";
+import dayjs from "dayjs";
+import _ from "lodash";
+import useUsersStore from "src/store/useUsersStore";
+import AddMemberDrawer from "./partials/AddMemberDrawer";
 
 const Projects: React.FC = () => {
-  const { fetchProjects, createProject, deleteProject, loadingStates, projects } =
+  const { fetchProjects, createProject, deleteProject, updateProject, loadingStates, projects } =
     useProjectStore();
+  const { fetchUsers, loadingStates: userLoadingStates } = useUsersStore();
 
   const [isOpenModal, setIsOpenModal] = useState(false);
+  const [isOpenDrawer, setIsOpenDrawer] = useState(false);
+  const [currentProject, setCurrentProject] = useState<Project>();
   const [projectDto, setProjectDto] = useState<ProjectDto>(initialValues);
   const [modalType, setModalType] = useState<ModalType>(ModalType.DEFAULT);
 
-  const openCreateModal = () => {
-    setIsOpenModal(true);
-    setProjectDto(initialValues);
-    setModalType(ModalType.CREATE);
+  const openCreateOrUpdateModal = (project?: Project) => {
+    if (_.isEmpty(project)) {
+      setIsOpenModal(true);
+      setProjectDto(initialValues);
+      setModalType(ModalType.CREATE);
+    } else {
+      const projectImage = convertImagUrlToUploadItem(project.projectImage);
+      const projectCover = convertImagUrlToUploadItem(project.projectCover);
+      const startDate = dayjs(project.startDate);
+      const endDate = dayjs(project.endDate);
+      const projectDto = { ...project, projectImage, projectCover, startDate, endDate };
+
+      setIsOpenModal(true);
+      setProjectDto(projectDto);
+      setModalType(ModalType.UPDATE);
+    }
+  };
+
+  const openAddMemberDrawer = (project: Project) => {
+    setIsOpenDrawer(true);
+    setCurrentProject(project);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsOpenDrawer(false);
+    setCurrentProject(undefined);
   };
 
   const handleCreateProject = async (projectDto: ProjectDto) => {
     try {
       await createProject(projectDto);
+      closeModal();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const handleUpdateProject = async (updateProjectDto: ProjectDto) => {
+    try {
+      await updateProject(projectDto.id, updateProjectDto, projectDto);
       closeModal();
     } catch (error) {
       console.log("error :>> ", error);
@@ -41,6 +78,35 @@ const Projects: React.FC = () => {
     setModalType(ModalType.DEFAULT);
   };
 
+  const generateModalInfo = () => {
+    switch (modalType) {
+      case ModalType.CREATE: {
+        return {
+          okText: "Create",
+          title: "Create Project",
+          onSubmit: handleCreateProject,
+          loading: loadingStates.includes(ELoading.CREATE),
+        };
+      }
+      case ModalType.UPDATE: {
+        return {
+          okText: "Update",
+          title: "Update Project",
+          onSubmit: handleUpdateProject,
+          loading: loadingStates.includes(ELoading.UPDATE),
+        };
+      }
+      default: {
+        return {
+          title: "",
+          okText: "",
+          loading: false,
+          onSubmit: () => {},
+        };
+      }
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
   }, []); //eslint-disable-line
@@ -53,7 +119,7 @@ const Projects: React.FC = () => {
             <p className="projects-header-title">Projects</p>
           </div>
           <div className="projects-header-right">
-            <Button type="primary" onClick={openCreateModal}>
+            <Button type="primary" onClick={() => openCreateOrUpdateModal()}>
               <Flex>
                 <Add size={20} />
                 <span>Add Project</span>
@@ -69,6 +135,8 @@ const Projects: React.FC = () => {
                   key={project.id}
                   project={project}
                   onRemoveProject={handleRemoveProject}
+                  openUpdateModal={openCreateOrUpdateModal}
+                  openAddMemberDrawer={openAddMemberDrawer}
                 />
               </Col>
             ))}
@@ -80,10 +148,16 @@ const Projects: React.FC = () => {
         modalType={modalType}
         projectDto={projectDto}
         onCancel={closeModal}
-        onSubmit={handleCreateProject}
-        okText={modalType === ModalType.CREATE ? "Create" : "Update"}
-        loading={loadingStates.includes(ModalType.CREATE ? CREATE : UPDATE)}
-        title={modalType === ModalType.CREATE ? "Create Project" : "Update Project"}
+        title={generateModalInfo().title}
+        okText={generateModalInfo().okText}
+        loading={generateModalInfo().loading}
+        onSubmit={generateModalInfo().onSubmit}
+      />
+      <AddMemberDrawer
+        open={isOpenDrawer}
+        project={currentProject}
+        onClose={handleCloseDrawer}
+        loading={userLoadingStates.includes(ELoading.FETCH)}
       />
     </>
   );

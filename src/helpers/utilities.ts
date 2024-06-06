@@ -1,12 +1,7 @@
+import _ from "lodash";
+import { v4 as uuidv4 } from "uuid";
 import supabase from "src/third-party/supabase";
-
-export const createUserImageFolder = async (uid: string) => {
-  try {
-    await supabase.storage.createBucket(uid, { public: true });
-  } catch (error) {
-    return Promise.reject(error);
-  }
-};
+import dayjs from "dayjs";
 
 export const createBucket = async (uuid: string) => {
   const { data, error } = await supabase.storage.createBucket(uuid, { public: true });
@@ -29,18 +24,66 @@ export const uploadImage = async (uuid: string, file: any) => {
   return Promise.resolve(response.data.publicUrl);
 };
 
-export const clearUserBuckets = async (userIds: string[]) => {
-  try {
-    const emptyRequests = userIds.map(async (uid) => {
-      return await supabase.storage.emptyBucket(uid);
-    });
-    const deleteRequests = userIds.map(async (uid) => {
-      return await supabase.storage.deleteBucket(uid);
-    });
+export const deleteImage = async (uuid: string, imageUrl: string) => {
+  const imageName = getImageNameFromImageUrl(imageUrl) || "";
+  const { data, error } = await supabase.storage.from(uuid).remove([imageName]);
 
-    await Promise.all(emptyRequests);
-    await Promise.all(deleteRequests);
-  } catch (error) {
-    return Promise.reject(error);
+  if (error) return Promise.reject(error);
+  else return Promise.resolve(data);
+};
+
+export const updateImage = async (newImages: any, item: any, imagePath: string) => {
+  const oldImage = item[imagePath]?.[0] || null;
+  const newImage = newImages?.[0] || null;
+
+  //case 1: prev image and curr image are empty
+  if (_.isEmpty(newImage) && _.isEmpty(oldImage)) {
+    return "";
   }
+
+  //case 2: prev image and curr image are not empty
+  if (!_.isEmpty(newImage) && !_.isEmpty(oldImage)) {
+    const oldImageName = getImageNameFromImageUrl(oldImage.url);
+    const newImageName = newImage.name;
+
+    //case 2.1: prev image and curr image are the same
+    if (oldImageName === newImageName) {
+      return oldImage.url;
+    }
+    //case 2.2: prev image is different from curr image
+    else {
+      await deleteImage(item.id, oldImage.url);
+      const newImageUrl = await uploadImage(item.id, newImage);
+      return newImageUrl;
+    }
+  }
+
+  //case 3: prev image is empty and curr image is not empty
+  if (_.isEmpty(oldImage) && !_.isEmpty(newImage)) {
+    const newImageUrl = await uploadImage(item.id, newImage);
+    return newImageUrl;
+  }
+
+  //case 4: prev image is not empty and curr image is empty
+  if (!_.isEmpty(oldImage) && _.isEmpty(newImage)) {
+    await deleteImage(item.id, oldImage.url);
+    return "";
+  }
+};
+
+export const getImageNameFromImageUrl = (imageUrl: string) => {
+  return _.last(_.split(imageUrl, "/"));
+};
+
+export const convertImagUrlToUploadItem = (imageUrl: string) => {
+  if (_.isEmpty(imageUrl)) return [];
+  const imageName = getImageNameFromImageUrl(imageUrl);
+  return [{ uid: uuidv4(), name: imageName, status: "done", url: imageUrl }];
+};
+
+export const convertDayToString = (day: any, format?: "start" | "end") => {
+  if (_.isEmpty(day)) return null;
+  if (format === "start") dayjs(day).startOf("day").toISOString();
+  if (format === "end") return dayjs(day).endOf("day").toISOString();
+  return dayjs(day).toISOString();
 };

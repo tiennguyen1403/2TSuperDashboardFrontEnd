@@ -4,7 +4,13 @@ import { Project, ProjectDto } from "src/pages/Projects/Project.type";
 import { axiosInstance } from "src/components/AxiosConfig";
 import { v4 as uuidv4 } from "uuid";
 import _ from "lodash";
-import { createBucket, deleteBucket, uploadImage } from "src/helpers/utilities";
+import {
+  convertDayToString,
+  createBucket,
+  deleteBucket,
+  updateImage,
+  uploadImage,
+} from "src/helpers/utilities";
 import dayjs from "dayjs";
 import { notification } from "antd";
 
@@ -14,10 +20,15 @@ type State = {
   loadingStates: ELoading[];
   fetchProjects: () => Promise<void>;
   createProject: (projectDto: ProjectDto) => Promise<void>;
+  updateProject: (
+    id: ProjectDto["id"],
+    projectDto: ProjectDto,
+    prevProject: ProjectDto
+  ) => Promise<void>;
   deleteProject: (id: Project["id"]) => Promise<void>;
 };
 
-const { FETCH, CREATE, DELETE } = ELoading;
+const { FETCH, CREATE, UPDATE, DELETE } = ELoading;
 
 const useProjectStore = create<State>((set, get) => ({
   projects: [],
@@ -60,6 +71,23 @@ const useProjectStore = create<State>((set, get) => ({
       return Promise.reject(error);
     } finally {
       set((state) => ({ ...state, loadingStates: _.pull(state.loadingStates, CREATE) }));
+    }
+  },
+  updateProject: async (id, projectDto, prevProject) => {
+    try {
+      set((state) => ({ ...state, loadingStates: [...state.loadingStates, UPDATE] }));
+      const projectImage = await updateImage(projectDto.projectImage, prevProject, "projectImage");
+      const projectCover = await updateImage(projectDto.projectCover, prevProject, "projectCover");
+      const startDate = convertDayToString(projectDto.startDate, "start");
+      const endDate = convertDayToString(projectDto.endDate, "end");
+      const payload = { ...projectDto, id, startDate, endDate, projectImage, projectCover };
+      await axiosInstance.put(`/projects/${id}`, payload);
+      notification.success({ message: "Project updated successfully!" });
+      get().fetchProjects();
+    } catch (error) {
+      return Promise.reject(error);
+    } finally {
+      set((state) => ({ ...state, loadingStates: _.pull(state.loadingStates, UPDATE) }));
     }
   },
   deleteProject: async (id) => {

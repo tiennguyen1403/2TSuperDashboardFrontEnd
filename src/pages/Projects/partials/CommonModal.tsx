@@ -61,6 +61,7 @@ const CommonModal: React.FC<Props> = (props) => {
     okText,
     onCancel,
     onOk: form.submit,
+    maskClosable: false,
     destroyOnClose: true,
     confirmLoading: loading,
     afterOpenChange: (open) => (open ? form.setFieldsValue(projectDto) : form.resetFields()),
