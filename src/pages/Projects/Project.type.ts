@@ -16,11 +16,11 @@ export interface ProjectDto {
   id?: string;
   name: string;
   status?: ProjectStatus;
-  projectImage?: string;
-  projectCover?: string;
+  projectImage?: string | null;
+  projectCover?: string | null;
   description?: string;
-  startDate?: string;
-  endDate?: string;
+  startDate?: string | null;
+  endDate?: string | null;
   isActive?: boolean;
 }
 
