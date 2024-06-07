@@ -1,22 +1,30 @@
-import { Button, Col, Flex, Row } from "antd";
-import { Add } from "iconsax-react";
 import React, { useEffect, useState } from "react";
-import useProjectStore from "src/store/useProjectStore";
-import CommonModal from "./partials/CommonModal";
+
+//Type Import
 import { Project, ProjectDto } from "./Project.type";
-import { initialValues } from "./constants";
-import { ELoading, ModalType } from "src/helpers/constants";
+import { ELoading, ModalType } from "src/generalTypes";
+
+//Hook Import
+import useProjectStore from "src/store/useProjectStore";
+
+//Component Import
+import { Add } from "iconsax-react";
+import { Button, Col, Flex, Row } from "antd";
 import ProjectCard from "./partials/ProjectCard";
-import { convertImagUrlToUploadItem } from "src/helpers/utilities";
-import dayjs from "dayjs";
-import _ from "lodash";
-import useUsersStore from "src/store/useUsersStore";
+import CommonModal from "./partials/CommonModal";
 import AddMemberDrawer from "./partials/AddMemberDrawer";
+
+//Helper and Library Import
+import _ from "lodash";
+import dayjs from "dayjs";
+import { convertImagUrlToUploadItem } from "src/helpers/utilities";
+
+//Constants Import
+import { initialValues } from "./constants";
 
 const Projects: React.FC = () => {
   const { fetchProjects, createProject, deleteProject, updateProject, loadingStates, projects } =
     useProjectStore();
-  const { fetchUsers, loadingStates: userLoadingStates } = useUsersStore();
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
@@ -153,12 +161,9 @@ const Projects: React.FC = () => {
         loading={generateModalInfo().loading}
         onSubmit={generateModalInfo().onSubmit}
       />
-      <AddMemberDrawer
-        open={isOpenDrawer}
-        project={currentProject}
-        onClose={handleCloseDrawer}
-        loading={userLoadingStates.includes(ELoading.FETCH)}
-      />
+      {isOpenDrawer && (
+        <AddMemberDrawer open={isOpenDrawer} project={currentProject} onClose={handleCloseDrawer} />
+      )}
     </>
   );
 };

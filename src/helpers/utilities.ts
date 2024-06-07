@@ -87,3 +87,7 @@ export const convertDayToString = (day: any, format?: "start" | "end") => {
   if (format === "end") return dayjs(day).endOf("day").toISOString();
   return dayjs(day).toISOString();
 };
+
+export const convertStringToDay = (dayString: string) => {
+  return _.isEmpty(dayString) ? null : dayjs(dayString);
+};

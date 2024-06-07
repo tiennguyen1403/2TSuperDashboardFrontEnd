@@ -2,13 +2,14 @@ import { create } from "zustand";
 import { axiosInstance } from "../components/AxiosConfig";
 import { User, UserDto } from "src/pages/Users/User.type";
 import { notification } from "antd";
-import { ELoading } from "src/helpers/constants";
 import _ from "lodash";
+import { ELoading, ListResponse, Pagination } from "src/generalTypes";
+import { deleteBucket } from "src/helpers/utilities";
 
 type State = {
   users: any;
   loadingStates: ELoading[];
-  fetchUsers: () => Promise<void>;
+  fetchUsers: (pagination: Pagination) => Promise<ListResponse<User>>;
   fetchUserDetail: (uid: string) => Promise<User>;
   addUser: (userDto: UserDto) => Promise<void>;
   updateUser: (userDto: UserDto) => Promise<void>;
@@ -17,14 +18,15 @@ type State = {
 
 const { FETCH, CREATE, UPDATE, DELETE } = ELoading;
 
-const useUsersStore = create<State>((set) => ({
+const useUsersStore = create<State>((set, get) => ({
   users: [],
   loadingStates: [],
 
-  fetchUsers: async () => {
+  fetchUsers: async (pagination: Pagination) => {
     try {
       set((state) => ({ ...state, loadingStates: [...state.loadingStates, FETCH] }));
-      const res = await axiosInstance.get("/users");
+      const { page, size } = pagination;
+      const res = await axiosInstance.get(`/users?page=${page}&size=${size}`);
       set((state) => ({ ...state, users: res.data }));
       return Promise.resolve(res.data);
     } catch (error: any) {
@@ -46,8 +48,6 @@ const useUsersStore = create<State>((set) => ({
       set((state) => ({ ...state, loadingStates: [...state.loadingStates, CREATE] }));
       await axiosInstance.post("/users", userDto);
       notification.success({ message: "User created successfully!" });
-      const res = await axiosInstance.get("/users");
-      set((state) => ({ ...state, users: res.data }));
       return Promise.resolve();
     } catch (error: any) {
       return Promise.reject(error);
@@ -58,10 +58,9 @@ const useUsersStore = create<State>((set) => ({
   updateUser: async (userDto) => {
     try {
       set((state) => ({ ...state, loadingStates: [...state.loadingStates, UPDATE] }));
-      await axiosInstance.put(`/users/${userDto.id}`, userDto);
-      notification.success({ message: "User updated successfully!" });
-      const res = await axiosInstance.get("/users");
-      set((state) => ({ ...state, users: res.data }));
+      const password = _.isEmpty(userDto.password) ? null : userDto.password;
+      await axiosInstance.put(`/users/${userDto.id}`, { ...userDto, password });
+      notification.success({ message: "User was updated successfully!" });
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
@@ -72,10 +71,11 @@ const useUsersStore = create<State>((set) => ({
   deleteUser: async (uid) => {
     try {
       set((state) => ({ ...state, loadingStates: [...state.loadingStates, DELETE] }));
+
+      await deleteBucket(uid);
       await axiosInstance.delete(`/users/${uid}`);
       notification.success({ message: "User deleted successfully!" });
-      const res = await axiosInstance.get("/users");
-      set((state) => ({ ...state, users: res.data }));
+
       return Promise.resolve();
     } catch (error: any) {
       return Promise.reject(error);

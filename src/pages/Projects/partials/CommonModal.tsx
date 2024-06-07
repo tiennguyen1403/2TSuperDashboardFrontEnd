@@ -13,9 +13,10 @@ import {
   Upload,
   UploadProps,
 } from "antd";
-import { ModalType, validateMessages } from "src/helpers/constants";
+import { validateMessages } from "src/helpers/constants";
 import { projectStatusOptions } from "../constants";
 import { ExportCurve } from "iconsax-react";
+import { ModalType } from "src/generalTypes";
 
 type Props = {
   open: boolean;

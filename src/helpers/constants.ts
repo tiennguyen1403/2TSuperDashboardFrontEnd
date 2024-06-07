@@ -1,3 +1,5 @@
+import { Pagination } from "src/generalTypes";
+
 export const validateMessages = {
   required: "${label} is required!", //eslint-disable-line
   types: {
@@ -11,15 +13,7 @@ export const validateMessages = {
 
 export const passwordRegEx = /^(?=.*\d)(?=.*[A-Z])(?=.*[a-z])(?=.*[^\w\d\s:])([^\s]){8,16}$/;
 
-export enum ELoading {
-  FETCH = "Fetch",
-  CREATE = "Create",
-  UPDATE = "Update",
-  DELETE = "Delete",
-}
-
-export enum ModalType {
-  DEFAULT = "default",
-  CREATE = "create",
-  UPDATE = "update",
-}
+export const defaultPagination: Pagination = {
+  page: 1,
+  size: 10,
+};

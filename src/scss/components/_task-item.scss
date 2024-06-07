@@ -1,0 +1,22 @@
+.task-item {
+  border: 1px solid #dee2e6;
+  border-radius: 14px;
+  padding: 16px;
+  background-color: #ffffff;
+
+  .task-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .task-item-title {
+      font-weight: 700;
+    }
+  }
+
+  .task-item-desc {
+    line-height: 20px;
+    font-weight: 600;
+    color: #5d6a83;
+  }
+}

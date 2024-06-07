@@ -1,13 +1,15 @@
-import {
-  Avatar,
-  Button,
-  Flex,
-  Popconfirm,
-  PopconfirmProps,
-  Table,
-  TableProps,
-  Typography,
-} from "antd";
+import React, { useEffect, useState } from "react";
+
+//Type Import
+import { User, UserDto } from "./User.type";
+import type { PopconfirmProps, TableProps } from "antd";
+import { ELoading, ModalType, Pagination } from "src/generalTypes";
+
+//Hook Import
+import useUsersStore from "../../store/useUsersStore";
+
+//Component Import
+import CommonModal from "./partials/CommonModal";
 import {
   Profile2User,
   User as UserIcon,
@@ -16,40 +18,41 @@ import {
   TickCircle,
   CloseCircle,
 } from "iconsax-react";
-import React, { useEffect, useState } from "react";
-import useUsersStore from "../../store/useUsersStore";
-import { User, UserDto } from "./User.type";
-import dayjs from "dayjs";
-import CommonModal from "./partials/CommonModal";
+import { Avatar, Button, Flex, Popconfirm, Table, Typography } from "antd";
+
+//Helper and Library Import
 import _ from "lodash";
+import dayjs from "dayjs";
+import { convertImagUrlToUploadItem, convertStringToDay } from "src/helpers/utilities";
+
+//Constants Import
 import { initialValues } from "./constants";
-import { ELoading, ModalType } from "src/helpers/constants";
+import { defaultPagination } from "src/helpers/constants";
 
 const CopyIcon = () => <Copy size={18} style={{ transform: "translateY(4px)" }} />;
-
 const { FETCH, CREATE, UPDATE } = ELoading;
 
 const Users: React.FC = () => {
-  const { fetchUsers, fetchUserDetail, addUser, updateUser, deleteUser, users, loadingStates } =
-    useUsersStore();
+  const { fetchUsers, addUser, updateUser, deleteUser, users, loadingStates } = useUsersStore();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [modalType, setModalType] = useState<ModalType>(ModalType.DEFAULT);
   const [userDto, setUserDto] = useState<UserDto>(initialValues);
+  const [pagination] = useState<Pagination>(defaultPagination);
 
-  const openCreateModal = () => {
-    setIsOpenModal(true);
-    setUserDto(initialValues);
-    setModalType(ModalType.CREATE);
-  };
+  const openCreateOrUpdateModal = (user?: User) => {
+    if (_.isEmpty(user)) {
+      setIsOpenModal(true);
+      setUserDto(initialValues);
+      setModalType(ModalType.CREATE);
+    } else {
+      const avatar = convertImagUrlToUploadItem(user.avatar);
+      const createdAt = convertStringToDay(user.createdAt);
+      const updatedAt = convertStringToDay(user.updatedAt);
+      const userDto = { ...user, avatar, createdAt, updatedAt };
 
-  const openUpdateModal = async (uid: string) => {
-    try {
-      const user = await fetchUserDetail(uid);
-      setUserDto(user as UserDto);
+      setUserDto(userDto);
       setIsOpenModal(true);
       setModalType(ModalType.UPDATE);
-    } catch (error) {
-      console.log("error :>> ", error);
     }
   };
 
@@ -62,9 +65,9 @@ const Users: React.FC = () => {
   const handleCreateUser = async (values: UserDto) => {
     try {
       const payload = _.omit(values, ["confirmPassword"]);
-      console.log("payload :>> ", payload);
-      // await addUser(payload);
-      // closeModal();
+      await addUser(payload);
+      fetchUsers(pagination);
+      closeModal();
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -73,9 +76,9 @@ const Users: React.FC = () => {
   const handleUpdateUser = async (values: UserDto) => {
     try {
       const payload = _.omit(values, ["confirmPassword"]);
-      console.log("payload :>> ", payload);
-      // await updateUser({ ...payload, id: userDto.id });
-      // closeModal();
+      await updateUser({ ...payload, id: userDto.id });
+      fetchUsers(pagination);
+      closeModal();
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -161,7 +164,7 @@ const Users: React.FC = () => {
       key: "action",
       render: (_, record) => (
         <Flex align="center" justify="center" gap={8}>
-          <Button type="primary" onClick={() => openUpdateModal(record.id)}>
+          <Button type="primary" onClick={() => openCreateOrUpdateModal(record)}>
             Edit
           </Button>
           <Popconfirm {...popConfirmProps} onConfirm={() => handleRemoveUser(record.id)}>
@@ -173,7 +176,7 @@ const Users: React.FC = () => {
   ];
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(pagination);
   }, []); //eslint-disable-line
 
   return (
@@ -185,7 +188,7 @@ const Users: React.FC = () => {
             <p className="users-header-title">Users</p>
           </div>
           <div className="users-header-right">
-            <Button type="primary" onClick={openCreateModal}>
+            <Button type="primary" onClick={() => openCreateOrUpdateModal()}>
               <Flex gap={8}>
                 <UserAdd size={20} />
                 <span>Add User</span>

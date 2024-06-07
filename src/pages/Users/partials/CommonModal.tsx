@@ -1,10 +1,23 @@
-import { Form, FormProps, Input, Modal, ModalProps, Switch } from "antd";
+import {
+  Button,
+  Form,
+  FormProps,
+  Input,
+  Modal,
+  ModalProps,
+  Switch,
+  Upload,
+  UploadProps,
+} from "antd";
 import React from "react";
 import { UserDto } from "../User.type";
-import { ModalType, passwordRegEx, validateMessages } from "src/helpers/constants";
+import { passwordRegEx, validateMessages } from "src/helpers/constants";
 import { RuleRender } from "antd/es/form";
+import _ from "lodash";
+import { ExportCurve } from "iconsax-react";
+import { ModalType } from "src/generalTypes";
 
-const { CREATE, UPDATE } = ModalType;
+const { CREATE } = ModalType;
 
 type Props = {
   open: boolean;
@@ -17,46 +30,81 @@ type Props = {
   onSubmit: (userDto: UserDto) => void;
 };
 
+const normFile = (e: any) => {
+  if (Array.isArray(e)) {
+    return e;
+  }
+  return e?.fileList;
+};
+
 const CommonModal: React.FC<Props> = (props) => {
   const { open, okText, title, onSubmit, onCancel, userDto, loading, modalType } = props;
   const [form] = Form.useForm();
 
   const validatePassword: RuleRender = () => ({
     validator: (_, value) => {
-      if (!value || value.match(passwordRegEx)) return Promise.resolve();
-      return Promise.reject(new Error("Password is not valid!"));
+      if (modalType === ModalType.CREATE) {
+        if (!value) {
+          return Promise.reject(new Error("Password is required!"));
+        }
+        if (value && !value.match(passwordRegEx)) {
+          return Promise.reject(new Error("Password is not valid!"));
+        }
+        return Promise.resolve();
+      }
+      if (modalType === ModalType.UPDATE) {
+        if (!value) {
+          return Promise.resolve();
+        }
+        if (value && !value.match(passwordRegEx)) {
+          return Promise.reject(new Error("Password is not valid!"));
+        }
+        return Promise.resolve();
+      }
     },
   });
 
   const validateConfirmPassword: RuleRender = ({ getFieldValue }) => ({
     validator: (rule, value) => {
-      // console.log("value :>> ", value);
-      // console.log("password :>> ", getFieldValue("password"));
-      // if (!value || getFieldValue("password") === value) return Promise.resolve();
-      // if (modalType === Update && value !== getFieldValue("password"))
-      //   return Promise.reject(new Error("The new password that you entered do not match!"));
-      // return Promise.reject(new Error("The new password that you entered do not match!"));
       const password = getFieldValue("password");
       const confirmPassword = value;
 
-      switch (modalType) {
-        case CREATE: {
-          if (!confirmPassword) return Promise.resolve();
-          if (confirmPassword && confirmPassword === password) return Promise.resolve();
-          return Promise.reject(new Error("The new password that you entered do not match!"));
+      if (modalType === ModalType.CREATE) {
+        if (!confirmPassword) {
+          return Promise.reject(new Error("Confirm Password is required!"));
         }
-        case UPDATE: {
-          if (!password) return Promise.resolve();
-          if (!confirmPassword) return Promise.resolve();
-          if (password && password === confirmPassword) return Promise.resolve();
-          return Promise.reject(new Error("The new password that you entered do not match!"));
-        }
-        default: {
+        if (confirmPassword && !password) {
           return Promise.resolve();
         }
+        if (confirmPassword !== password) {
+          return Promise.reject(new Error("The new password that you entered do not match!"));
+        }
+
+        return Promise.resolve();
+      }
+
+      if (modalType === ModalType.UPDATE) {
+        if (!password) {
+          return Promise.resolve();
+        }
+        if (password && !confirmPassword) {
+          return Promise.reject(new Error("Confirm Password is required!"));
+        }
+        if (password !== confirmPassword) {
+          return Promise.reject(new Error("The new password that you entered do not match!"));
+        }
+
+        return Promise.resolve();
       }
     },
   });
+
+  const uploadProps: UploadProps = {
+    accept: ".jpg,.png,.jpeg",
+    multiple: false,
+    maxCount: 1,
+    beforeUpload: () => false,
+  };
 
   const formProps: FormProps = {
     form: form,
@@ -65,6 +113,10 @@ const CommonModal: React.FC<Props> = (props) => {
     layout: "vertical",
     onFinish: onSubmit,
     clearOnDestroy: true,
+    onValuesChange: (changedValues) => {
+      if (_.has(changedValues, "password")) form.validateFields(["confirmPassword"]);
+      if (_.has(changedValues, "confirmPassword")) form.validateFields(["password"]);
+    },
   };
 
   const modalProps: ModalProps = {
@@ -108,7 +160,7 @@ const CommonModal: React.FC<Props> = (props) => {
         <Form.Item<UserDto>
           hasFeedback
           name="password"
-          rules={[{ required: modalType === CREATE }, validatePassword]}
+          rules={[validatePassword]}
           label={modalType === CREATE ? "Password" : "New Password"}
           extra={
             <span>
@@ -125,7 +177,7 @@ const CommonModal: React.FC<Props> = (props) => {
         <Form.Item<UserDto>
           hasFeedback
           name="confirmPassword"
-          rules={[{ required: modalType === CREATE }, validateConfirmPassword]}
+          rules={[validateConfirmPassword]}
           label={modalType === CREATE ? "Confirm Password" : "Confirm New Password"}
         >
           <Input.Password
@@ -134,6 +186,18 @@ const CommonModal: React.FC<Props> = (props) => {
         </Form.Item>
         <Form.Item<UserDto> label="Active" name="isActive" valuePropName="checked">
           <Switch />
+        </Form.Item>
+        <Form.Item<UserDto>
+          label="Avatar"
+          name="avatar"
+          valuePropName="fileList"
+          getValueFromEvent={normFile}
+        >
+          <Upload {...uploadProps}>
+            <Button block icon={<ExportCurve size={20} />}>
+              Click to upload avatar
+            </Button>
+          </Upload>
         </Form.Item>
       </Form>
     </Modal>

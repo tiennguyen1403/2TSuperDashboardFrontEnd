@@ -2,6 +2,7 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
+  avatar: string;
   username: string;
   isActive: boolean;
   createdAt: string;
@@ -16,5 +17,5 @@ export interface UserDto {
   password?: string;
   confirmPassword?: string;
   isActive?: boolean;
-  avatar?: string;
+  avatar?: any;
 }

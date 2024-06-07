@@ -16,6 +16,7 @@ const headerStyle = {
 
 const contentStyle = {
   padding: "32px 48px",
+  backgroundColor: "#f5f7fa",
   "overflow-y": "auto",
 };
 

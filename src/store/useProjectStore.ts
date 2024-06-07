@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { ELoading } from "src/helpers/constants";
 import { Project, ProjectDto } from "src/pages/Projects/Project.type";
 import { axiosInstance } from "src/components/AxiosConfig";
 import { v4 as uuidv4 } from "uuid";
@@ -13,6 +12,7 @@ import {
 } from "src/helpers/utilities";
 import dayjs from "dayjs";
 import { notification } from "antd";
+import { ELoading } from "src/generalTypes";
 
 type State = {
   projects: Project[];

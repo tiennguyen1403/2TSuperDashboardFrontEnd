@@ -10,6 +10,7 @@ import AuthLayout from "./layouts/AuthLayout";
 import SignUp from "./pages/SignUp";
 import Users from "./pages/Users";
 import Projects from "./pages/Projects";
+import Tasks from "./pages/Tasks";
 
 const App: React.FC = () => {
   const router = createBrowserRouter([
@@ -32,6 +33,10 @@ const App: React.FC = () => {
         {
           path: "projects",
           element: <Projects />,
+        },
+        {
+          path: "tasks",
+          element: <Tasks />,
         },
       ],
     },
