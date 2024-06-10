@@ -9,15 +9,15 @@ type State = {
   tasks: Task[];
   totalItem: number;
   loading: ELoading[];
-  fetchTasks: () => Promise<void>;
+  fetchTasks: () => Promise<Task[]>;
   createTask: (taskDto: TaskDto) => Promise<void>;
-  updateTask: (id: Task["id"], taskDto: TaskDto) => Promise<void>;
+  updateTask: (taskDto: TaskDto) => Promise<void>;
   deleteTask: (id: Task["id"]) => Promise<void>;
 };
 
 const { FETCH, CREATE, UPDATE, DELETE } = ELoading;
 
-const useTaskStore = create<State>((set) => ({
+const useTaskStore = create<State>((set, get) => ({
   tasks: [],
   totalItem: 0,
   loading: [],
@@ -30,24 +30,28 @@ const useTaskStore = create<State>((set) => ({
       totalItem: res.data.totalItem,
       loading: _.pull(state.loading, FETCH),
     }));
+    return Promise.resolve(res.data.items);
   },
   createTask: async (taskDto) => {
     set((state) => ({ ...state, loading: [...state.loading, CREATE] }));
     await axiosInstance.post("/tasks", taskDto);
     notification.success({ message: "Task was created successfully!" });
     set((state) => ({ ...state, loading: _.pull(state.loading, CREATE) }));
+    get().fetchTasks();
   },
-  updateTask: async (id, taskDto) => {
+  updateTask: async (taskDto) => {
     set((state) => ({ ...state, loading: [...state.loading, UPDATE] }));
-    await axiosInstance.put(`/tasks/${id}`, { ...taskDto, id });
+    await axiosInstance.put(`/tasks/${taskDto.id}`, taskDto);
     notification.success({ message: "Task was updated successfully!" });
     set((state) => ({ ...state, loading: _.pull(state.loading, UPDATE) }));
+    get().fetchTasks();
   },
   deleteTask: async (id) => {
     set((state) => ({ ...state, loading: [...state.loading, DELETE] }));
     await axiosInstance.delete(`/tasks/${id}`);
     notification.success({ message: "Task was deleted successfully!" });
     set((state) => ({ ...state, loading: _.pull(state.loading, DELETE) }));
+    get().fetchTasks();
   },
 }));
 

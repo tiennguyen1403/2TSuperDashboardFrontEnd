@@ -74,6 +74,17 @@ const items: MenuItem[] = [
           </Link>
         ),
       },
+      {
+        key: "test-dnd",
+        label: (
+          <Link to="/test-dnd" className="menu-title">
+            <Flex align="center" gap={8}>
+              <TaskSquare size={20} variant="Bulk" />
+              <p>Test Drag and Drop</p>
+            </Flex>
+          </Link>
+        ),
+      },
     ],
   },
 ];

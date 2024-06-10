@@ -11,6 +11,7 @@ import SignUp from "./pages/SignUp";
 import Users from "./pages/Users";
 import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
+import TestDnd from "./pages/TestDnd";
 
 const App: React.FC = () => {
   const router = createBrowserRouter([
@@ -37,6 +38,10 @@ const App: React.FC = () => {
         {
           path: "tasks",
           element: <Tasks />,
+        },
+        {
+          path: "test-dnd",
+          element: <TestDnd />,
         },
       ],
     },

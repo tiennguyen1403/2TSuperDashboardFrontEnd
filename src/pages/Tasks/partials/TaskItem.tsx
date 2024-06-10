@@ -19,6 +19,7 @@ const TaskItem: React.FC<Props> = (props) => {
       {children}
     </div>
   );
+  // return <div className="task-item">{children}</div>;
 };
 
 export default TaskItem;
