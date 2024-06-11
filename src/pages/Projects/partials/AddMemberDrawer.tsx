@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Button, Drawer, DrawerProps, Flex } from "antd";
-import { Project } from "../Project.type";
 import useUsersStore from "src/store/useUsersStore";
 import { Pagination } from "src/generalTypes";
 import { defaultPagination } from "src/helpers/constants";
@@ -8,13 +7,12 @@ import { User } from "src/pages/Users/User.type";
 
 type Props = {
   open: boolean;
-  project?: Project;
   onClose: () => void;
 };
 
 const AddMemberDrawer: React.FC<Props> = (props) => {
   const { fetchUsers } = useUsersStore();
-  const { open, project, onClose } = props;
+  const { open, onClose } = props;
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [pagination] = useState<Pagination>(defaultPagination);
@@ -57,7 +55,7 @@ const AddMemberDrawer: React.FC<Props> = (props) => {
 
   return (
     <Drawer {...drawerProps}>
-      <p>{project?.name}</p>
+      <p>Add Member</p>
     </Drawer>
   );
 };

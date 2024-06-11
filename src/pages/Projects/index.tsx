@@ -28,7 +28,6 @@ const Projects: React.FC = () => {
 
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [isOpenDrawer, setIsOpenDrawer] = useState(false);
-  const [currentProject, setCurrentProject] = useState<Project>();
   const [projectDto, setProjectDto] = useState<ProjectDto>(initialValues);
   const [modalType, setModalType] = useState<ModalType>(ModalType.DEFAULT);
 
@@ -50,14 +49,12 @@ const Projects: React.FC = () => {
     }
   };
 
-  const openAddMemberDrawer = (project: Project) => {
+  const openAddMemberDrawer = () => {
     setIsOpenDrawer(true);
-    setCurrentProject(project);
   };
 
   const handleCloseDrawer = () => {
     setIsOpenDrawer(false);
-    setCurrentProject(undefined);
   };
 
   const handleCreateProject = async (projectDto: ProjectDto) => {
@@ -161,9 +158,7 @@ const Projects: React.FC = () => {
         loading={generateModalInfo().loading}
         onSubmit={generateModalInfo().onSubmit}
       />
-      {isOpenDrawer && (
-        <AddMemberDrawer open={isOpenDrawer} project={currentProject} onClose={handleCloseDrawer} />
-      )}
+      <AddMemberDrawer open={isOpenDrawer} onClose={handleCloseDrawer} />
     </>
   );
 };

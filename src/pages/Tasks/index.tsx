@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Button, Modal } from "antd";
 import {
   DndContext,
-  KeyboardSensor,
+  DragOverlay,
   MouseSensor,
-  PointerSensor,
   TouchSensor,
-  closestCenter,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -21,7 +19,7 @@ import { ELoading } from "src/generalTypes";
 import { initialTaskGroup, initialValues } from "./constants";
 import useUsersStore from "src/store/useUsersStore";
 import TaskGroupModal from "./partials/TaskGroupModal";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 
 const { confirm } = Modal;
 
@@ -34,14 +32,16 @@ const Tasks: React.FC = () => {
   const [taskDto, setTaskDto] = useState<TaskDto>(initialValues);
   const [modalType, setModalType] = useState<ModalType>(ModalType.DEFAULT);
   const [taskGroupDto, setTaskGroupDto] = useState<TaskGroupDto>(initialTaskGroup);
-  const [activeId, setActiveId] = useState();
+  const [taskColumns, setTaskColumns] = useState<TaskGroupType[]>([]);
+  const [activeColumn, setActiveColumn] = useState();
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
+  // const pointSensor = useSensor(PointerSensor, { activationConstraint: { distance: 10 } });
+  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 10 } });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint: { delay: 250, tolerance: 5 },
+  });
+  // const sensors = useSensors(pointSensor);
+  const sensors = useSensors(mouseSensor, touchSensor);
 
   const openCreateOrUpdateTask = (task?: Task) => {
     if (_.isEmpty(task)) {
@@ -141,16 +141,22 @@ const Tasks: React.FC = () => {
     }
   };
 
-  const handleDragStart = (event: any) => {
-    const { active } = event;
-    const { id } = active;
-    setActiveId(id);
+  const onDragStart = (event: any) => {
+    setActiveColumn(event.active.id);
   };
 
-  const handleDragEnd = (event: any) => {
+  const onDragEnd = (event: any) => {
     const { active, over } = event;
-    console.log("active :>> ", active);
-    console.log("over :>> ", over);
+
+    if (_.isNull(over)) return;
+
+    if (active.id !== over.id) {
+      const oldIndex = _.findIndex(taskColumns, { id: active.id });
+      const newIndex = _.findIndex(taskColumns, { id: over.id });
+      const newTaskColumns = arrayMove(taskColumns, oldIndex, newIndex);
+      setTaskColumns(newTaskColumns);
+      setActiveColumn(undefined);
+    }
   };
 
   useEffect(() => {
@@ -158,6 +164,10 @@ const Tasks: React.FC = () => {
     fetchTaskGroups();
     fetchUsers({ page: 1, size: 10 });
   }, []); //eslint-disable-line
+
+  useEffect(() => {
+    setTaskColumns(taskGroups);
+  }, [taskGroups]);
 
   return (
     <>
@@ -177,24 +187,27 @@ const Tasks: React.FC = () => {
           </div>
         </div>
         <div className="tasks-body">
-          <DndContext
-            sensors={sensors}
-            onDragEnd={handleDragEnd}
-            onDragStart={handleDragStart}
-            collisionDetection={closestCenter}
-          >
-            {taskGroups.map((taskGroup) => (
-              <TaskGroup
-                id={taskGroup.id}
-                key={taskGroup.id}
-                taskGroup={taskGroup}
-                onDeleteTaskGroup={handleRemoveTaskGroup}
-                handleUpdateTaskGroup={handleUpdateTaskGroup}
-                showDeleteTaskConfirm={showDeleteTaskConfirm}
-                openCreateOrUpdateTask={openCreateOrUpdateTask}
-                tasks={tasks.filter((task) => task.status.id === taskGroup.id)}
-              />
-            ))}
+          <DndContext sensors={sensors} onDragEnd={onDragEnd} onDragStart={onDragStart}>
+            <SortableContext
+              items={_.map(taskColumns, "id")}
+              strategy={horizontalListSortingStrategy}
+            >
+              {taskColumns.map((taskGroup) => (
+                <TaskGroup
+                  id={taskGroup.id}
+                  key={taskGroup.id}
+                  taskGroup={taskGroup}
+                  onDeleteTaskGroup={handleRemoveTaskGroup}
+                  handleUpdateTaskGroup={handleUpdateTaskGroup}
+                  showDeleteTaskConfirm={showDeleteTaskConfirm}
+                  openCreateOrUpdateTask={openCreateOrUpdateTask}
+                  tasks={tasks.filter((task) => task.status.id === taskGroup.id)}
+                />
+              ))}
+              <DragOverlay>
+                <p>Hello world {activeColumn}</p>
+              </DragOverlay>
+            </SortableContext>
           </DndContext>
         </div>
       </div>
