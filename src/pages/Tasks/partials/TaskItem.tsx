@@ -11,7 +11,7 @@ const TaskItem: React.FC<Props> = (props) => {
   const { children } = props;
   // const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
   // const style = {
-  //   transform: CSS.Transform.toString(transform),
+  //   transform: CSS.Translate.toString(transform),
   //   transition,
   // };
   // return (

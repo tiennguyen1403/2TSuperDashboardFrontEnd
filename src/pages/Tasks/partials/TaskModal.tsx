@@ -1,8 +1,9 @@
 import React from "react";
-import { ModalType, TaskDto, TaskGroup } from "../Task.type";
-import { Form, FormProps, Input, Modal, ModalProps, Select, Switch } from "antd";
+import { TaskDto, TaskGroup } from "../Task.type";
+import { Form, FormProps, Input, Modal, ModalProps, Select } from "antd";
 import { validateMessages } from "src/helpers/constants";
 import { User } from "src/pages/Users/User.type";
+import { ModalType } from "src/generalTypes";
 
 type Props = {
   open: boolean;
@@ -61,9 +62,6 @@ const TaskModal: React.FC<Props> = (props) => {
         </Form.Item>
         <Form.Item<TaskDto> label="Description" name="description">
           <Input.TextArea autoSize={{ minRows: 4 }} placeholder="Enter task description ..." />
-        </Form.Item>
-        <Form.Item<TaskDto> label="Completed" name="isCompleted" valuePropName="checked">
-          <Switch />
         </Form.Item>
         <Form.Item<TaskDto> label="Status" name="status" rules={[{ required: true }]}>
           <Select

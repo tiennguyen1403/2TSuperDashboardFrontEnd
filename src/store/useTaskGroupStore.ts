@@ -13,6 +13,7 @@ type State = {
   createTaskGroup: (taskGroupDto: TaskGroupDto) => Promise<void>;
   updateTaskGroup: (taskGroupDto: TaskGroupDto, showAlert?: boolean) => Promise<void>;
   deleteTaskGroup: (id: string) => Promise<void>;
+  reorderTaskGroup: (newTaskGroups: TaskGroup[]) => Promise<void>;
 };
 
 const { FETCH, CREATE, UPDATE, DELETE } = ELoading;
@@ -22,35 +23,60 @@ const useTaskGroupStore = create<State>((set, get) => ({
   totalItem: 0,
   loading: [],
   fetchTaskGroups: async () => {
-    set((state) => ({ ...state, loading: [...state.loading, FETCH] }));
-    const res = await axiosInstance.get("/task-group");
-    set((state) => ({
-      ...state,
-      taskGroups: res.data.items,
-      totalItem: res.data.totalItem,
-      loading: _.pull(state.loading, FETCH),
-    }));
+    try {
+      set((state) => ({ ...state, loading: [...state.loading, FETCH] }));
+      const res = await axiosInstance.get("/task-group");
+      set((state) => ({
+        ...state,
+        taskGroups: _.orderBy(res.data.items, ["order"], ["asc"]),
+        totalItem: res.data.totalItem,
+        loading: _.pull(state.loading, FETCH),
+      }));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   },
   createTaskGroup: async (taskGroupDto) => {
-    set((state) => ({ ...state, loading: [...state.loading, CREATE] }));
-    await axiosInstance.post("/task-group", taskGroupDto);
-    notification.success({ message: "Task Group was created successfully!" });
-    set((state) => ({ ...state, loading: _.pull(state.loading, CREATE) }));
-    get().fetchTaskGroups();
+    try {
+      set((state) => ({ ...state, loading: [...state.loading, CREATE] }));
+      await axiosInstance.post("/task-group", taskGroupDto);
+      set((state) => ({ ...state, loading: _.pull(state.loading, CREATE) }));
+      get().fetchTaskGroups();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   },
-  updateTaskGroup: async (taskGroupDto, showAlert = false) => {
-    set((state) => ({ ...state, loading: [...state.loading, UPDATE] }));
-    await axiosInstance.put(`/task-group/${taskGroupDto.id}`, taskGroupDto);
-    showAlert && notification.success({ message: "Task Group was updated successfully!" });
-    set((state) => ({ ...state, loading: _.pull(state.loading, UPDATE) }));
-    get().fetchTaskGroups();
+  updateTaskGroup: async (taskGroupDto) => {
+    try {
+      set((state) => ({ ...state, loading: [...state.loading, UPDATE] }));
+      await axiosInstance.put(`/task-group/${taskGroupDto.id}`, taskGroupDto);
+      set((state) => ({ ...state, loading: _.pull(state.loading, UPDATE) }));
+      get().fetchTaskGroups();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   },
   deleteTaskGroup: async (id) => {
-    set((state) => ({ ...state, loading: [...state.loading, DELETE] }));
-    await axiosInstance.delete(`/task-group/${id}`);
-    notification.success({ message: "Task Group was deleted successfully!" });
-    set((state) => ({ ...state, loading: _.pull(state.loading, DELETE) }));
-    get().fetchTaskGroups();
+    try {
+      set((state) => ({ ...state, loading: [...state.loading, DELETE] }));
+      await axiosInstance.delete(`/task-group/${id}`);
+      notification.success({ message: "Task Group was deleted successfully!" });
+      set((state) => ({ ...state, loading: _.pull(state.loading, DELETE) }));
+      get().fetchTaskGroups();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  },
+  reorderTaskGroup: async (newTaskGroups) => {
+    try {
+      set((state) => ({ ...state, loading: [...state.loading, UPDATE] }));
+      const payload = { newTaskGroups };
+      await axiosInstance.patch("/task-group/reorder", payload);
+      set((state) => ({ ...state, loading: _.pull(state.loading, UPDATE) }));
+      get().fetchTaskGroups();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   },
 }));
 

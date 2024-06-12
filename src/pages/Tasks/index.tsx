@@ -3,8 +3,10 @@ import { Button, Modal } from "antd";
 import {
   DndContext,
   DragOverlay,
+  DropAnimation,
   MouseSensor,
   TouchSensor,
+  defaultDropAnimationSideEffects,
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
@@ -12,58 +14,59 @@ import { Add, InfoCircle, TaskSquare } from "iconsax-react";
 import TaskGroup from "./partials/TaskGroup";
 import useTaskGroupStore from "src/store/useTaskGroupStore";
 import useTaskStore from "src/store/useTaskStore";
-import { ModalType, Task, TaskDto, TaskGroup as TaskGroupType, TaskGroupDto } from "./Task.type";
+import { Task, TaskDto, TaskGroupDto } from "./Task.type";
 import TaskModal from "./partials/TaskModal";
 import _ from "lodash";
-import { ELoading } from "src/generalTypes";
-import { initialTaskGroup, initialValues } from "./constants";
+import { ELoading, ModalType } from "src/generalTypes";
+import { initialValues } from "./constants";
 import useUsersStore from "src/store/useUsersStore";
-import TaskGroupModal from "./partials/TaskGroupModal";
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 
 const { confirm } = Modal;
 
+const dropAnimation: DropAnimation = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: "0.5",
+      },
+    },
+  }),
+};
+
 const Tasks: React.FC = () => {
   const { fetchUsers, users } = useUsersStore();
-  const { fetchTaskGroups, createTaskGroup, updateTaskGroup, deleteTaskGroup, taskGroups } =
-    useTaskGroupStore();
+  const {
+    fetchTaskGroups,
+    createTaskGroup,
+    updateTaskGroup,
+    deleteTaskGroup,
+    reorderTaskGroup,
+    taskGroups,
+  } = useTaskGroupStore();
   const { fetchTasks, createTask, updateTask, deleteTask, tasks, loading } = useTaskStore();
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [taskDto, setTaskDto] = useState<TaskDto>(initialValues);
   const [modalType, setModalType] = useState<ModalType>(ModalType.DEFAULT);
-  const [taskGroupDto, setTaskGroupDto] = useState<TaskGroupDto>(initialTaskGroup);
-  const [taskColumns, setTaskColumns] = useState<TaskGroupType[]>([]);
   const [activeColumn, setActiveColumn] = useState();
 
   // const pointSensor = useSensor(PointerSensor, { activationConstraint: { distance: 10 } });
-  const mouseSensor = useSensor(MouseSensor, { activationConstraint: { distance: 10 } });
+  const mouseSensor = useSensor(MouseSensor);
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: { delay: 250, tolerance: 5 },
   });
   // const sensors = useSensors(pointSensor);
   const sensors = useSensors(mouseSensor, touchSensor);
 
-  const openCreateOrUpdateTask = (task?: Task) => {
+  const openCreateOrUpdateTask = (task?: Task, taskGroupId?: string) => {
     if (_.isEmpty(task)) {
       setIsOpenModal(true);
-      setTaskDto(initialValues);
-      setModalType(ModalType.CREATE_TASK);
+      setModalType(ModalType.CREATE);
+      setTaskDto({ ...initialValues, status: taskGroupId ?? null });
     } else {
       setIsOpenModal(true);
-      setModalType(ModalType.UPDATE_TASK);
+      setModalType(ModalType.UPDATE);
       setTaskDto({ ...task, status: task.status.id, assignedFor: task.assignedFor.id });
-    }
-  };
-
-  const openCreateOrUpdateTaskGroup = (taskGroup?: TaskGroupType) => {
-    if (_.isEmpty(taskGroup)) {
-      setIsOpenModal(true);
-      setTaskGroupDto(initialTaskGroup);
-      setModalType(ModalType.CREATE_TASK_GROUP);
-    } else {
-      setIsOpenModal(true);
-      setTaskGroupDto(taskGroup);
-      setModalType(ModalType.UPDATE_TASK_GROUP);
     }
   };
 
@@ -77,13 +80,9 @@ const Tasks: React.FC = () => {
 
   const handleRemoveTask = (taskId: string) => deleteTask(taskId);
 
-  const handleCreateTaskGroup = (taskGroupDto: TaskGroupDto) => {
-    createTaskGroup(taskGroupDto).then(closeModal);
-  };
+  const handleCreateTaskGroup = () => createTaskGroup({ name: "New Column" });
 
-  const handleUpdateTaskGroup = (taskGroupDto: TaskGroupDto) => {
-    updateTaskGroup(taskGroupDto, false);
-  };
+  const handleUpdateTaskGroup = (taskGroupDto: TaskGroupDto) => updateTaskGroup(taskGroupDto);
 
   const handleRemoveTaskGroup = (taskGroupId: string) => deleteTaskGroup(taskGroupId);
 
@@ -91,7 +90,6 @@ const Tasks: React.FC = () => {
     setIsOpenModal(false);
     setTaskDto(initialValues);
     setModalType(ModalType.DEFAULT);
-    setTaskGroupDto(initialTaskGroup);
   };
 
   const showDeleteTaskConfirm = (taskId: string) => {
@@ -106,7 +104,7 @@ const Tasks: React.FC = () => {
 
   const generateModalInfo = (): any => {
     switch (modalType) {
-      case ModalType.CREATE_TASK: {
+      case ModalType.CREATE: {
         return {
           okText: "Create",
           title: "Create Task",
@@ -114,20 +112,12 @@ const Tasks: React.FC = () => {
           loading: loading.includes(ELoading.CREATE),
         };
       }
-      case ModalType.UPDATE_TASK: {
+      case ModalType.UPDATE: {
         return {
           okText: "Update",
           title: "Update Task",
           onSubmit: handleUpdateTask,
           loading: loading.includes(ELoading.UPDATE),
-        };
-      }
-      case ModalType.CREATE_TASK_GROUP: {
-        return {
-          okText: "Create",
-          title: "Create Task Group",
-          onSubmit: handleCreateTaskGroup,
-          loading: false,
         };
       }
       default: {
@@ -151,10 +141,13 @@ const Tasks: React.FC = () => {
     if (_.isNull(over)) return;
 
     if (active.id !== over.id) {
-      const oldIndex = _.findIndex(taskColumns, { id: active.id });
-      const newIndex = _.findIndex(taskColumns, { id: over.id });
-      const newTaskColumns = arrayMove(taskColumns, oldIndex, newIndex);
-      setTaskColumns(newTaskColumns);
+      const oldIndex = _.findIndex(taskGroups, { id: active.id });
+      const newIndex = _.findIndex(taskGroups, { id: over.id });
+      const newTaskGroups = arrayMove(taskGroups, oldIndex, newIndex).map((taskGroup, index) => ({
+        ...taskGroup,
+        order: index + 1,
+      }));
+      reorderTaskGroup(newTaskGroups);
       setActiveColumn(undefined);
     }
   };
@@ -165,10 +158,6 @@ const Tasks: React.FC = () => {
     fetchUsers({ page: 1, size: 10 });
   }, []); //eslint-disable-line
 
-  useEffect(() => {
-    setTaskColumns(taskGroups);
-  }, [taskGroups]);
-
   return (
     <>
       <div className="tasks">
@@ -178,7 +167,7 @@ const Tasks: React.FC = () => {
             <p className="tasks-header-title">Tasks Management</p>
           </div>
           <div className="tasks-header-right">
-            <Button type="primary" icon={<Add />} onClick={() => openCreateOrUpdateTaskGroup()}>
+            <Button type="primary" icon={<Add />} onClick={handleCreateTaskGroup}>
               Add Task Group
             </Button>
             <Button type="primary" icon={<Add />} onClick={() => openCreateOrUpdateTask()}>
@@ -189,10 +178,10 @@ const Tasks: React.FC = () => {
         <div className="tasks-body">
           <DndContext sensors={sensors} onDragEnd={onDragEnd} onDragStart={onDragStart}>
             <SortableContext
-              items={_.map(taskColumns, "id")}
+              items={_.map(taskGroups, "id")}
               strategy={horizontalListSortingStrategy}
             >
-              {taskColumns.map((taskGroup) => (
+              {taskGroups.map((taskGroup) => (
                 <TaskGroup
                   id={taskGroup.id}
                   key={taskGroup.id}
@@ -201,10 +190,30 @@ const Tasks: React.FC = () => {
                   handleUpdateTaskGroup={handleUpdateTaskGroup}
                   showDeleteTaskConfirm={showDeleteTaskConfirm}
                   openCreateOrUpdateTask={openCreateOrUpdateTask}
-                  tasks={tasks.filter((task) => task.status.id === taskGroup.id)}
+                  tasks={tasks.filter((task) => {
+                    console.log("task :>> ", task);
+                    console.log("taskGroup :>> ", taskGroup);
+                    return task.status?.id === taskGroup.id;
+                  })}
                 />
               ))}
-              <DragOverlay>
+              {/* <div
+                style={{
+                  width: "25%",
+                  borderRadius: 8,
+                  padding: 16,
+                  background: "#ffffff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                }}
+              >
+                <AddCircle />
+                <span style={{ fontSize: 18, fontWeight: 600 }}>New Column</span>
+              </div> */}
+              <DragOverlay dropAnimation={dropAnimation}>
                 <p>Hello world {activeColumn}</p>
               </DragOverlay>
             </SortableContext>
@@ -213,6 +222,7 @@ const Tasks: React.FC = () => {
       </div>
       <TaskModal
         taskDto={taskDto}
+        open={isOpenModal}
         modalType={modalType}
         onCancel={closeModal}
         userOptions={users.items}
@@ -221,20 +231,6 @@ const Tasks: React.FC = () => {
         okText={generateModalInfo().okText}
         loading={generateModalInfo().loading}
         onSubmit={generateModalInfo().onSubmit}
-        open={isOpenModal && [ModalType.CREATE_TASK, ModalType.UPDATE_TASK].includes(modalType)}
-      />
-      <TaskGroupModal
-        taskGroupDto={taskGroupDto}
-        modalType={modalType}
-        onCancel={closeModal}
-        title={generateModalInfo().title}
-        okText={generateModalInfo().okText}
-        loading={generateModalInfo().loading}
-        onSubmit={generateModalInfo().onSubmit}
-        open={
-          isOpenModal &&
-          [ModalType.CREATE_TASK_GROUP, ModalType.UPDATE_TASK_GROUP].includes(modalType)
-        }
       />
     </>
   );
